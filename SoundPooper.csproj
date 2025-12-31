@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows</TargetFramework>
+        <LangVersion>13</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <StartupObject>SoundPooper.Program</StartupObject>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+      <PackageReference Include="NAudio" Version="2.2.1" />
+      <PackageReference Include="RadialMenu.WPF" Version="1.3.0" />
+      <PackageReference Include="Unity" Version="5.11.10" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Infrastructure\Engine\" />
+      <Folder Include="Infrastructure\Sounds\" />
+      <Folder Include="MVVM\Models\" />
+    </ItemGroup>
+
+</Project>

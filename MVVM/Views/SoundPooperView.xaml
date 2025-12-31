@@ -1,0 +1,42 @@
+<Window x:Class="SoundPooper.MVVM.Views.SoundPooperView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        AllowsTransparency="True"
+        Background="Transparent"
+        WindowStyle="None"
+        xmlns:rm="clr-namespace:RadialMenu.Controls;assembly=RadialMenu"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        WindowStartupLocation="CenterScreen"
+        Cursor="None"
+        DataContext="{Binding SoundPooperViewModel, 
+        Source={StaticResource Locator}}"
+        Title="SoundPooperView" Height="450" Width="800">
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseMove">
+            <i:InvokeCommandAction Command="{Binding MouseMoveCommand}"
+                                   PassEventArgsToCommand="True" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid>
+        <rm:RadialMenu IsOpen="True">
+            <rm:RadialMenu.CentralItem>
+                <rm:RadialMenuCentralItem Background="Red" HorizontalContentAlignment="Stretch"
+                                          VerticalContentAlignment="Stretch">
+                    <TextBlock>Close</TextBlock>
+                </rm:RadialMenuCentralItem>
+            </rm:RadialMenu.CentralItem>
+            <rm:RadialMenuItem Background="AliceBlue">
+                <TextBlock>hello</TextBlock>
+            </rm:RadialMenuItem>
+            <rm:RadialMenuItem Background="AliceBlue">
+                <TextBlock>hello</TextBlock>
+            </rm:RadialMenuItem>
+            <rm:RadialMenuItem Background="AliceBlue">
+                <TextBlock>hello</TextBlock>
+            </rm:RadialMenuItem>
+        </rm:RadialMenu>
+    </Grid>
+</Window>
