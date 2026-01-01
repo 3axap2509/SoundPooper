@@ -1,12 +1,13 @@
 using System.Windows;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using SoundPooper.Infrastructure.Services;
 
-namespace SoundPooper.MVVM.Services;
+namespace SoundPooper.Services;
 
-public class CursorManagerService : ICursorManager
+public class CursorLimiterService : ICursorLimiterService
 {
-    public CursorManagerService()
+    public CursorLimiterService()
     {
     }
 
@@ -28,6 +29,12 @@ public class CursorManagerService : ICursorManager
         var newX = (int)(centerX + radius * Math.Cos(angle));
         var newY = (int)(centerY + radius * Math.Sin(angle));
         var screenPoint = toScreen(new Point(newX, newY));
-        SetCursorPos((int)screenPoint.X, (int)screenPoint.Y);
+        // SetCursorPos((int)screenPoint.X, (int)screenPoint.Y);
+        var a = SystemParameters.VirtualScreenWidth;
+        var b = Screen.PrimaryScreen.Bounds.Width;
+        // SetCursorPos(
+        //     (int)(SystemParameters.PrimaryScreenHeight / 2),
+        //     (int)(SystemParameters.PrimaryScreenWidth / 2)
+        // );
     }
 }

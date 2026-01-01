@@ -5,5 +5,5 @@ namespace SoundPooper.MVVM.ViewModels;
 
 public class ViewModelLocator
 {
-    public SoundPooperViewModel SoundPooperViewModel => IocManager.Container.Resolve<SoundPooperViewModel>();
+    public static SoundPooperViewModel SoundPooperViewModel => IocManager.Resolve<SoundPooperViewModel>();
 }

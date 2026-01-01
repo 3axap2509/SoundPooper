@@ -10,10 +10,14 @@
         xmlns:rm="clr-namespace:RadialMenu.Controls;assembly=RadialMenu"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         WindowStartupLocation="CenterScreen"
-        Cursor="None"
+        Top="{Binding WindowTopLeftY, Mode=TwoWay}"
+        Left="{Binding WindowTopLeftX, Mode=TwoWay}"
+        Cursor="Hand "
         DataContext="{Binding SoundPooperViewModel, 
         Source={StaticResource Locator}}"
-        Title="SoundPooperView" Height="450" Width="800">
+        Title="SoundPooperView"
+        Height="600"
+        Width="600">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="MouseMove">
             <i:InvokeCommandAction Command="{Binding MouseMoveCommand}"
@@ -21,14 +25,16 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Grid>
-        <rm:RadialMenu IsOpen="True">
+        <rm:RadialMenu IsOpen="True"
+                       Background="Red"
+                       Height="600"
+                       Width="600">
             <rm:RadialMenu.CentralItem>
-                <rm:RadialMenuCentralItem Background="Red" HorizontalContentAlignment="Stretch"
-                                          VerticalContentAlignment="Stretch">
+                <rm:RadialMenuCentralItem Background="Red">
                     <TextBlock>Close</TextBlock>
                 </rm:RadialMenuCentralItem>
             </rm:RadialMenu.CentralItem>
-            <rm:RadialMenuItem Background="AliceBlue">
+            <rm:RadialMenuItem OuterRadius="50" ContentRadius="500" Background="AliceBlue">
                 <TextBlock>hello</TextBlock>
             </rm:RadialMenuItem>
             <rm:RadialMenuItem Background="AliceBlue">

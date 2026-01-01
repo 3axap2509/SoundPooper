@@ -6,7 +6,6 @@
         <LangVersion>13</LangVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <StartupObject>SoundPooper.Program</StartupObject>
         <UseWPF>true</UseWPF>
     </PropertyGroup>
 

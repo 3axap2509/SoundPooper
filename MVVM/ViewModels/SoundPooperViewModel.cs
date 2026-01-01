@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using NAudio.Utils;
@@ -8,22 +9,41 @@ namespace SoundPooper.MVVM.ViewModels;
 
 public class SoundPooperViewModel : ViewModelBase
 {
-    private readonly ICursorManager _cursorManager;
+    private readonly ICursorLimiterService _cursorLimiterService;
+    private readonly IScreenInfoService _screenInfoService;
 
-    public SoundPooperViewModel(ICursorManager cursorManager)
+    public SoundPooperViewModel(ICursorLimiterService cursorLimiterService, IScreenInfoService screenInfoService)
     {
-        _cursorManager = cursorManager;
+        _cursorLimiterService = cursorLimiterService;
+        _screenInfoService = screenInfoService;
+        _windowTopLeftX = (int)_screenInfoService.TopLeft.X;
+        _windowTopLeftY = (int)_screenInfoService.TopLeft.Y;
+    }
+
+    private int _windowTopLeftX;
+    private int _windowTopLeftY;
+
+    public int WindowTopLeftX
+    {
+        get => _windowTopLeftX;
+        set => SetField(ref _windowTopLeftX, value);
+    }
+
+    public int WindowTopLeftY
+    {
+        get => _windowTopLeftY;
+        set => SetField(ref _windowTopLeftY, value);
     }
 
     public ICommand MouseMoveCommand => new CommandBase(OnMouseMove);
 
     private void OnMouseMove(object? e)
     {
-        var param = e as MouseEventArgs;
-        _cursorManager.CheckAndLimit(
+        if (e is not MouseEventArgs param) return;
+        _cursorLimiterService.CheckAndLimit(
             param.GetPosition((IInputElement)param.Source),
-            200,
-            200,
+            _windowTopLeftX,
+            _windowTopLeftY,
             150,
             (p) => p
         );
