@@ -7,9 +7,6 @@ namespace SoundPooper.Services;
 
 public class CursorLimiterService : ICursorLimiterService
 {
-    public CursorLimiterService()
-    {
-    }
 
     [DllImport("user32.dll")]
     private static extern bool SetCursorPos(int x, int y);
