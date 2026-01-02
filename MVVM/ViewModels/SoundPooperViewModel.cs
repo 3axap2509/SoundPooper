@@ -14,11 +14,33 @@ public class SoundPooperViewModel : ViewModelBase
 
     public SoundPooperViewModel(ICursorLimiterService cursorLimiterService, IScreenInfoService screenInfoService)
     {
+        var soundFiles = Directory.GetFiles(
+            "D:\\Games\\Battle.net\\BattleNetGames\\World of Warcraft\\_retail_\\Interface\\AddOns\\SharedMedia_MyMedia\\sound"
+        );
+        SoundList = soundFiles
+            .Select(
+                sf => new RadialMenuItem
+                {
+                    Name = Path.GetFileNameWithoutExtension(sf),
+                    Uid = sf,
+                    Content = Path.GetFileNameWithoutExtension(sf)
+                }
+            ).ToList();
+
+        SoundList.ForEach(rmi => rmi.MouseEnter +=
+            (sender, args) =>
+            {
+                if (sender is not RadialMenuItem rmItem) return;
+                _lastSelectedItem = rmItem;
+                Console.WriteLine(rmItem.Uid);
+            });
+
         _cursorLimiterService = cursorLimiterService;
-        _screenInfoService = screenInfoService;
-        _windowTopLeftX = (int)_screenInfoService.TopLeft.X;
-        _windowTopLeftY = (int)_screenInfoService.TopLeft.Y;
+        _windowTopLeftX = (int)screenInfoService.TopLeft.X;
+        _windowTopLeftY = (int)screenInfoService.TopLeft.Y;
     }
+
+    private RadialMenuItem _lastSelectedItem;
 
     private int _windowTopLeftX;
     private int _windowTopLeftY;
@@ -48,4 +70,6 @@ public class SoundPooperViewModel : ViewModelBase
             (p) => p
         );
     }
+
+    public List<RadialMenuItem> SoundList { get; init; }
 }
