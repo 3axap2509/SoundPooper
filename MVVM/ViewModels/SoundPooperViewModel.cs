@@ -1,49 +1,77 @@
-using System.Runtime.InteropServices;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
-using NAudio.Utils;
+using SoundPooper.Infrastructure.Enums;
+using SoundPooper.Infrastructure.IoC.Factories;
 using SoundPooper.Infrastructure.Services;
-using SoundPooper.MVVM.Commands;
 
 namespace SoundPooper.MVVM.ViewModels;
 
 public class SoundPooperViewModel : ViewModelBase
 {
     private readonly ICursorLimiterService _cursorLimiterService;
-    private readonly IScreenInfoService _screenInfoService;
+    private readonly ISoundService _soundService;
 
-    public SoundPooperViewModel(ICursorLimiterService cursorLimiterService, IScreenInfoService screenInfoService)
+    public List<SoundButtonViewModel> SoundListLeftPart { get; init; }
+    public List<SoundButtonViewModel> SoundListRightPart { get; init; }
+
+    public SoundPooperViewModel()
     {
+        ContainerWidth = 700;
+        ContainerHeight = 500;
+        SoundElementHeight = SoundElementWidth = 80;
+        SoundListLeftPart =
+        [
+            new SoundButtonViewModel() { Title = "heh1", Height = SoundElementHeight, Width = SoundElementWidth },
+            new SoundButtonViewModel() { Title = "heh2", Height = SoundElementHeight, Width = SoundElementWidth },
+            new SoundButtonViewModel() { Title = "heh3", Height = SoundElementHeight, Width = SoundElementWidth },
+            new SoundButtonViewModel() { Title = "heh4", Height = SoundElementHeight, Width = SoundElementWidth }
+        ];
+        SoundListRightPart =
+        [
+            new SoundButtonViewModel() { Title = "heh5", Height = SoundElementHeight, Width = SoundElementWidth },
+            new SoundButtonViewModel() { Title = "heh6", Height = SoundElementHeight, Width = SoundElementWidth },
+            new SoundButtonViewModel() { Title = "heh7", Height = SoundElementHeight, Width = SoundElementWidth },
+            new SoundButtonViewModel() { Title = "heh8", Height = SoundElementHeight, Width = SoundElementWidth }
+        ];
+    }
+
+    public SoundPooperViewModel(
+        ICursorLimiterService cursorLimiterService,
+        IScreenInfoService screenInfoService,
+        ISoundService soundService,
+        ISoundViewModelFactory soundVmFactory)
+    {
+        ContainerWidth = 700;
+        ContainerHeight = 500;
         var soundFiles = Directory.GetFiles(
-            "D:\\Games\\Battle.net\\BattleNetGames\\World of Warcraft\\_retail_\\Interface\\AddOns\\SharedMedia_MyMedia\\sound"
+            "D:\\HehMusic\\test"
         );
-        SoundList = soundFiles
-            .Select(
-                sf => new RadialMenuItem
-                {
-                    Name = Path.GetFileNameWithoutExtension(sf),
-                    Uid = sf,
-                    Content = Path.GetFileNameWithoutExtension(sf)
-                }
+
+        SoundElementHeight = SoundElementWidth = 70;
+        var soundsCount = soundFiles.Length;
+        SoundListLeftPart = soundFiles
+            .Take(soundsCount / 2)
+            .Select(sf =>
+                soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth)
+            ).ToList();
+        SoundListRightPart = soundFiles
+            .TakeLast(soundsCount / 2)
+            .Select(sf =>
+                soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth)
             ).ToList();
 
-        SoundList.ForEach(rmi => rmi.MouseEnter +=
-            (sender, args) =>
-            {
-                if (sender is not RadialMenuItem rmItem) return;
-                _lastSelectedItem = rmItem;
-                Console.WriteLine(rmItem.Uid);
-            });
-
         _cursorLimiterService = cursorLimiterService;
+        _soundService = soundService;
         _windowTopLeftX = (int)screenInfoService.TopLeft.X;
         _windowTopLeftY = (int)screenInfoService.TopLeft.Y;
     }
 
-    private RadialMenuItem _lastSelectedItem;
-
     private int _windowTopLeftX;
     private int _windowTopLeftY;
+    private float _soundVolume = 0.7f;
+    private int SoundElementHeight { get; }
+    private int SoundElementWidth { get; }
 
     public int WindowTopLeftX
     {
@@ -57,7 +85,40 @@ public class SoundPooperViewModel : ViewModelBase
         set => SetField(ref _windowTopLeftY, value);
     }
 
-    public ICommand MouseMoveCommand => new CommandBase(OnMouseMove);
+    public int ContainerHeight { get; }
+    public int ContainerWidth { get; }
+
+    public ActionButtonViewModel StopActionButton =>
+        new(
+            _soundService,
+            ButtonFunctionEnum.StopPlaying,
+            "Stop"
+        );
+
+    public ActionButtonViewModel RepeatActionButton =>
+        new(
+            _soundService,
+            ButtonFunctionEnum.RepeatLastSound,
+            "Repeat"
+        );
+
+    public ActionButtonViewModel CancelActionButton =>
+        new(
+            _soundService,
+            ButtonFunctionEnum.DoNothing,
+            "Cancel"
+        );
+
+    public float SoundVolume
+    {
+        get => _soundVolume;
+        set
+        {
+            if (!SetField(ref _soundVolume, value)) return;
+            _soundService.SetSoundVolume(value);
+        }
+    }
+
 
     private void OnMouseMove(object? e)
     {
@@ -70,6 +131,4 @@ public class SoundPooperViewModel : ViewModelBase
             (p) => p
         );
     }
-
-    public List<RadialMenuItem> SoundList { get; init; }
 }
