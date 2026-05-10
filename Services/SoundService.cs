@@ -2,11 +2,20 @@ using NAudio.CoreAudioApi;
 using SoundPooper.Infrastructure.Services;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using SoundPooper.Modules;
 
 namespace SoundPooper.Services;
 
 public class SoundService : ISoundService
 {
+    //private const string MicrophoneKeyString = "Razer";
+    private const string MicrophoneKeyString = "NVIDIA";
+    
+    private readonly int _cutOffFrequency = 2000;
+    private readonly List<ISampleProvider> _mixerInputs = new();
+    
+    
+    private AsioOut? _asioOut;
     private BufferedWaveProvider? _micBuffer;
     private MixingSampleProvider? _mainMixer;
     private MixingSampleProvider? _soundMixer;
@@ -15,12 +24,9 @@ public class SoundService : ISoundService
     private WasapiCapture? _micCapture;
     private WasapiOut? _virtualMicOut;
     private ISampleProvider? _micSampleProvider;
-    private readonly List<ISampleProvider> _mixerInputs = new();
 
     private string _lastPlayedSoundPath = string.Empty;
-
     private Action _actionToExecute = EmptyAction;
-
     private static Action EmptyAction => () => { };
 
 
@@ -31,44 +37,54 @@ public class SoundService : ISoundService
         var outputDevicesList = new MMDeviceEnumerator()
             .EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
         var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2);
-
+        var drivers = AsioOut.GetDriverNames();
+        var asioDriverName = drivers.FirstOrDefault(d => d.Contains("ASIO4ALL"));
+        if (asioDriverName == null)
+        {
+            throw new Exception("ASIO4ALL драйвер не найден!");
+        }
+        _asioOut = new AsioOut(asioDriverName);
         // 1. Microphone
-        var micDevice = inputDevicesList.First(d => d.FriendlyName.Contains("NVIDIA"));
+        var micDevice = inputDevicesList.First(d => d.FriendlyName.Contains(MicrophoneKeyString));
         _micCapture = new WasapiCapture(micDevice) { WaveFormat = waveFormat };
         _micBuffer = new BufferedWaveProvider(_micCapture.WaveFormat);
         _micCapture.DataAvailable += (s, e) =>
             _micBuffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
         _micCapture.StartRecording();
         _micSampleProvider = _micBuffer.ToSampleProvider();
-
+        //_micSampleProvider = new NoiseSuppressorProvider(_micBuffer.ToSampleProvider(), _cutOffFrequency);
+        
         // 2. Sound mixer
         _soundMixer = new MixingSampleProvider(waveFormat) { ReadFully = true };
         _soundVolume = new VolumeSampleProvider(_soundMixer) { Volume = 1f };
-
         // 3. Main mixer
         _mainMixer = new MixingSampleProvider(waveFormat) { ReadFully = true };
         _mainMixer.AddMixerInput(_soundVolume);
         _mainMixer.AddMixerInput(_micSampleProvider);
 
-        // 3. To output device (VB-Cable)
-        var virtualMicDevice = outputDevicesList
-            .First(
-                mic => mic.FriendlyName.Equals(
-                    "CABLE Input (VB-Audio Virtual Cable)",
-                    StringComparison.InvariantCulture
-                )
-            );
-
-
-        // ищем виртуальный кабель
-        _virtualMicOut = new WasapiOut(
-            virtualMicDevice,
-            AudioClientShareMode.Shared,
-            true,
-            20
-        );
-        _virtualMicOut.Init(_mainMixer);
-        _virtualMicOut.Play();
+        // // 3. To output device (VB-Cable)
+        // var virtualMicDevice = outputDevicesList
+        //     .First(
+        //         mic => mic.FriendlyName.Equals(
+        //             "CABLE Input (VB-Audio Virtual Cable)",
+        //             StringComparison.InvariantCulture
+        //         )
+        //     );
+        //
+        //
+        // // ищем виртуальный кабель
+        // _virtualMicOut = new WasapiOut(
+        //     virtualMicDevice,
+        //     AudioClientShareMode.Exclusive,
+        //     true,
+        //     20
+        // );
+        // _virtualMicOut.Init(_mainMixer);
+        // _virtualMicOut.Play();
+        
+        _asioOut.Init(_mainMixer);
+        _asioOut.Play();
+        _asioOut.ShowControlPanel();
     }
 
 
