@@ -1,4 +1,5 @@
 using System.Windows;
+using SoundPooper.Infrastructure.IoC.Factories;
 using SoundPooper.Infrastructure.Services;
 using SoundPooper.MVVM.ViewModels;
 using SoundPooper.MVVM.Views;
@@ -18,6 +19,8 @@ public static class IocManager
 
     public static void InitializeContainer()
     {
+        Container.RegisterSingleton<ISoundService, SoundService>();
+        Container.RegisterSingleton<ISoundViewModelFactory, SoundViewModelFactory>();
         Container.RegisterSingleton<IScreenInfoService, ScreenInfoService>();
         Container.RegisterSingleton<ICursorLimiterService, CursorLimiterService>();
         Container.RegisterSingleton<SoundPooperViewModel>();
