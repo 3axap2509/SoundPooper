@@ -4,7 +4,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:rm="clr-namespace:RadialMenu.Controls;assembly=RadialMenu"
+        xmlns:vm="clr-namespace:SoundPooper.MVVM.ViewModels"
+        xmlns:views="clr-namespace:SoundPooper.MVVM.Views"
+        xmlns:userControls="clr-namespace:SoundPooper.UserControls"
+        xmlns:extensions="clr-namespace:SoundPooper.MVVM.Extensions"
+
         mc:Ignorable="d"
         AllowsTransparency="True"
         Background="Transparent"
@@ -12,14 +16,18 @@
         WindowStartupLocation="CenterScreen"
         Topmost="True"
         ShowInTaskbar="False"
+        ShowActivated="False"
         Top="{Binding WindowTopLeftY, Mode=OneWay}"
         Left="{Binding WindowTopLeftX, Mode=OneWay}"
         Cursor="Hand"
-        DataContext="{Binding SoundPooperViewModel,
-        Source={StaticResource Locator}}"
+        DataContext="{Binding
+            SoundPooperViewModel,
+            Source={StaticResource Locator}
+        }"
+        d:DataContext="{d:DesignInstance Type=vm:SoundPooperViewModel, IsDesignTimeCreatable=True}"
         Title="SoundPooperView"
-        Height="600"
-        Width="600">
+        Height="{Binding ContainerHeight}"
+        Width="{Binding ContainerWidth}">
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="MouseMove">
             <i:InvokeCommandAction Command="{Binding MouseMoveCommand}"
@@ -27,17 +35,75 @@
         </i:EventTrigger>
     </i:Interaction.Triggers>
     <Grid>
-        <rm:RadialMenu
-            Content="{Binding SoundList, Mode=OneTime}"
-            IsOpen="True"
-            Background="Red"
-            Height="600"
-            Width="600">
-            <rm:RadialMenu.CentralItem>
-                <rm:RadialMenuCentralItem Background="Red">
-                    <TextBlock>Close</TextBlock>
-                </rm:RadialMenuCentralItem>
-            </rm:RadialMenu.CentralItem>
-        </rm:RadialMenu>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <ItemsControl
+            Grid.Column="0"
+            Style="{StaticResource SplitedItemsPanelStyle}"
+            ItemsSource="{Binding SoundListLeftPart}">
+        </ItemsControl>
+        <StackPanel Grid.Column="1"
+                    Orientation="Vertical"
+                    VerticalAlignment="Top">
+            <Button Style="{StaticResource RoundedButtonStyle}"
+                    DataContext="{Binding StopActionButton}"
+                    Content="{Binding Title}"
+                    Width="100"
+                    Height="100"
+                    extensions:ButtonExtensions.CornerRadius="50"
+                    Background="Red">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseEnter">
+                        <i:InvokeCommandAction
+                            Command="{Binding MouseEnterCommand }"
+                            PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+            <Button Style="{StaticResource RoundedButtonStyle}"
+                    DataContext="{Binding RepeatActionButton}"
+                    Content="{Binding Title}"
+                    Width="100"
+                    Height="100"
+                    extensions:ButtonExtensions.CornerRadius="50"
+                    Background="Blue">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseEnter">
+                        <i:InvokeCommandAction
+                            Command="{Binding MouseEnterCommand }"
+                            PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+            <Button Style="{StaticResource RoundedButtonStyle}"
+                    DataContext="{Binding CancelActionButton}"
+                    Width="100"
+                    Height="100"
+                    extensions:ButtonExtensions.CornerRadius="50"
+                    Background="ForestGreen"
+                    Content="{Binding Title}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseEnter">
+                        <i:InvokeCommandAction
+                            Command="{Binding MouseEnterCommand }"
+                            PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+            <userControls:CircularSlider
+                SmallChange="0.01"
+                Value="{Binding SoundVolume, Mode=TwoWay}"
+                Minimum="0.01"
+                Maximum="1" />
+
+        </StackPanel>
+        <ItemsControl
+            Grid.Column="2"
+            Style="{StaticResource SplitedItemsPanelStyle}"
+            ItemsSource="{Binding SoundListRightPart}">
+        </ItemsControl>
     </Grid>
 </Window>
