@@ -16,14 +16,19 @@ public class KeyboardService : IKeyboardService
 
     private readonly Window _view;
     private readonly IScreenInfoService _screenInfoService;
+    private readonly ISoundService _soundService;
 
     private bool _isPressed;
 
-    public KeyboardService(Window view, IScreenInfoService screenInfoService)
+    public KeyboardService(
+        Window view,
+        IScreenInfoService screenInfoService,
+        ISoundService soundService)
     {
         _proc = HookCallback;
         _view = view;
         _screenInfoService = screenInfoService;
+        _soundService = soundService;
         InitializeHooks();
     }
 
@@ -87,6 +92,8 @@ public class KeyboardService : IKeyboardService
             case WmKeyUp:
                 _isPressed = false;
                 _view.Hide();
+                _soundService.ExecuteCurrentAction();
+                Console.WriteLine("KeyUp");
                 break;
         }
 
@@ -100,8 +107,9 @@ public class KeyboardService : IKeyboardService
 
     private static IntPtr SetHook(LowLevelKeyboardProc proc)
     {
-        using Process curProcess = Process.GetCurrentProcess();
-        using ProcessModule curModule = curProcess.MainModule;
+        using var curProcess = Process.GetCurrentProcess();
+        using var curModule = curProcess.MainModule;
+        if (curModule is null) throw new NullReferenceException();
         return SetWindowsHookEx(
             WhKeyboardLl,
             proc,
@@ -112,7 +120,7 @@ public class KeyboardService : IKeyboardService
 
     // mouse
     [StructLayout(LayoutKind.Sequential)]
-    public struct Point
+    private struct Point
     {
         public int X;
         public int Y;
