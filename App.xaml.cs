@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using SoundPooper.Infrastructure.IoC;
 using SoundPooper.Infrastructure.Services;
 using Application = System.Windows.Application;
@@ -8,6 +9,7 @@ namespace SoundPooper;
 public partial class App : Application
 {
     private readonly IKeyboardService _keyboardService;
+    private readonly ISoundService soundService;
 
     public App()
     {
@@ -15,6 +17,8 @@ public partial class App : Application
         InitializeComponent();
         MainWindow = IocManager.Resolve<Window>();
         _keyboardService = IocManager.Resolve<IKeyboardService>();
+        soundService = IocManager.Resolve<ISoundService>();
+        soundService.Initialize();
     }
 
     protected override void OnExit(ExitEventArgs e)
