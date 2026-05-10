@@ -108,6 +108,13 @@ public class SoundPooperViewModel : ViewModelBase
             ButtonFunctionEnum.DoNothing,
             "Cancel"
         );
+    
+    public ActionButtonViewModel QuitActionButton =>
+        new(
+            _soundService,
+            ButtonFunctionEnum.Quit,
+            "Quit"
+        );
 
     public float SoundVolume
     {

@@ -1,6 +1,5 @@
-using System.Drawing;
+using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using SoundPooper.Infrastructure.Enums;
 using SoundPooper.Infrastructure.Services;
 using SoundPooper.MVVM.Commands;
@@ -39,13 +38,15 @@ public class ActionButtonViewModel : ViewModelBase
                 break;
             case ButtonFunctionEnum.RepeatLastSound:
                 _soundService.SetLastPlayedSoundToRepeat();
-                Console.WriteLine("repeat pressed");
                 break;
             case ButtonFunctionEnum.DoNothing:
             {
                 _soundService.SetVoidAction();
                 break;
             }
+            case ButtonFunctionEnum.Quit:
+                Application.Current.Shutdown();
+                break;
             default:
                 throw new ArgumentOutOfRangeException();
         }

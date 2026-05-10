@@ -5,5 +5,6 @@ public enum ButtonFunctionEnum
     PlaySound,
     RepeatLastSound,
     StopPlaying,
-    DoNothing
+    DoNothing,
+    Quit
 }

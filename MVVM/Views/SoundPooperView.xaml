@@ -54,7 +54,7 @@
                     Width="100"
                     Height="100"
                     extensions:ButtonExtensions.CornerRadius="50"
-                    Background="Red">
+                    Background="DarkRed">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseEnter">
                         <i:InvokeCommandAction
@@ -99,6 +99,21 @@
                 Minimum="0.01"
                 Maximum="1" />
 
+            <Button Style="{StaticResource RoundedButtonStyle}"
+                    DataContext="{Binding QuitActionButton}"
+                    Content="{Binding Title}"
+                    Width="100"
+                    Height="100"
+                    extensions:ButtonExtensions.CornerRadius="50"
+                    Background="DeepPink">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseEnter">
+                        <i:InvokeCommandAction
+                            Command="{Binding MouseEnterCommand }"
+                            PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
         </StackPanel>
         <ItemsControl
             Grid.Column="2"
