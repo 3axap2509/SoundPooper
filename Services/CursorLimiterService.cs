@@ -28,7 +28,7 @@ public class CursorLimiterService : ICursorLimiterService
         var screenPoint = toScreen(new Point(newX, newY));
         // SetCursorPos((int)screenPoint.X, (int)screenPoint.Y);
         var a = SystemParameters.VirtualScreenWidth;
-        var b = Screen.PrimaryScreen.Bounds.Width;
+        var b = Screen.PrimaryScreen?.Bounds.Width;
         // SetCursorPos(
         //     (int)(SystemParameters.PrimaryScreenHeight / 2),
         //     (int)(SystemParameters.PrimaryScreenWidth / 2)
