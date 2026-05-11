@@ -1,6 +1,4 @@
 using System.IO;
-using System.Windows;
-using System.Windows.Input;
 using SoundPooper.Infrastructure.Enums;
 using SoundPooper.Infrastructure.IoC.Factories;
 using SoundPooper.Infrastructure.Services;
@@ -9,7 +7,6 @@ namespace SoundPooper.MVVM.ViewModels;
 
 public class SoundPooperViewModel : ViewModelBase
 {
-    private readonly ICursorLimiterService _cursorLimiterService;
     private readonly ISoundService _soundService;
     private int _windowTopLeftX;
     private int _windowTopLeftY;
@@ -45,12 +42,16 @@ public class SoundPooperViewModel : ViewModelBase
     }
 
     public SoundPooperViewModel(
-        ICursorLimiterService cursorLimiterService,
         IScreenInfoService screenInfoService,
         ISoundService soundService,
         ISoundViewModelFactory soundVmFactory,
         IActionButtonViewModelFactory actionButtonVmFactory)
     {
+        _soundService = soundService;
+
+        _windowTopLeftX = (int)screenInfoService.TopLeft.X;
+        _windowTopLeftY = (int)screenInfoService.TopLeft.Y;
+
         ContainerWidth = 700;
         ContainerHeight = 500;
         var soundFiles = Directory.GetFiles("D:\\HehMusic\\test");
@@ -65,12 +66,6 @@ public class SoundPooperViewModel : ViewModelBase
             .TakeLast(soundsCount / 2)
             .Select(sf => soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth))
             .ToList();
-
-        _cursorLimiterService = cursorLimiterService;
-        _soundService = soundService;
-
-        _windowTopLeftX = (int)screenInfoService.TopLeft.X;
-        _windowTopLeftY = (int)screenInfoService.TopLeft.Y;
 
         RepeatActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.RepeatLastSound, "Repeat");
         StopActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.StopPlaying, "Stop");
