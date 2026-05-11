@@ -10,22 +10,30 @@ namespace SoundPooper.Infrastructure.IoC;
 
 public static class IocManager
 {
+    private static readonly UnityContainer Container;
+
     static IocManager()
     {
         Container = new UnityContainer();
     }
 
-    private static readonly UnityContainer Container;
-
     public static void InitializeContainer()
     {
-        Container.RegisterSingleton<ISoundService, SoundService>();
-        Container.RegisterSingleton<ISoundViewModelFactory, SoundViewModelFactory>();
+        //Helpers
         Container.RegisterSingleton<IScreenInfoService, ScreenInfoService>();
         Container.RegisterSingleton<ICursorLimiterService, CursorLimiterService>();
+
+        //Infrastructure
+        Container.RegisterSingleton<IActionService, ActionService>();
+        Container.RegisterSingleton<ISoundService, SoundService>();
+        Container.RegisterSingleton<ISoundViewModelFactory, SoundViewModelFactory>();
+
+        //MVVM
         Container.RegisterSingleton<SoundPooperViewModel>();
         Container.RegisterSingleton<App>();
         Container.RegisterSingleton<Window, SoundPooperView>();
+
+        //Hardware
         Container.RegisterSingleton<IKeyboardService, KeyboardService>();
     }
 

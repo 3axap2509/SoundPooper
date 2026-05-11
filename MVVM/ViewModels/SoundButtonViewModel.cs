@@ -17,11 +17,12 @@ public class SoundButtonViewModel : ActionButtonViewModel
 
     public SoundButtonViewModel(
         ISoundService soundService,
+        IActionService actionService,
         string title,
         string path,
         int height,
         int width)
-        : base(soundService, ButtonFunctionEnum.PlaySound, title)
+        : base(soundService, actionService, ButtonFunctionEnum.PlaySound, title)
     {
         Path = path;
         Height = height;
@@ -32,6 +33,6 @@ public class SoundButtonViewModel : ActionButtonViewModel
     {
         if (ButtonFunction != ButtonFunctionEnum.PlaySound)
             throw new InvalidOperationException();
-        _soundService.SetPlaySoundAction(Path);
+        ActionService.SetActionToExecute(SoundService.PlaySound, Path);
     }
 }

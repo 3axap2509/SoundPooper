@@ -8,47 +8,38 @@ namespace SoundPooper.MVVM.ViewModels;
 
 public class ActionButtonViewModel : ViewModelBase
 {
-    protected readonly ISoundService _soundService;
-    public string? Title { get; init; }
+    private static readonly Action VoidAction = () => { };
+
+    protected readonly IActionService ActionService;
+    protected readonly ISoundService SoundService;
+    protected ButtonFunctionEnum ButtonFunction { get; }
+    public string Title { get; init; } = string.Empty;
     public ICommand MouseEnterCommand => new CommandBase(SetActionToExecute);
-
-    public ButtonFunctionEnum ButtonFunction { get; init; }
-
-    public ActionButtonViewModel()
-    {
-    }
 
     public ActionButtonViewModel(
         ISoundService soundService,
+        IActionService actionService,
         ButtonFunctionEnum buttonFunction,
         string title)
     {
         Title = title;
-        _soundService = soundService;
+        ActionService = actionService;
+        SoundService = soundService;
         ButtonFunction = buttonFunction;
     }
 
-
-    protected virtual void SetActionToExecute(object? e)
+    protected ActionButtonViewModel()
     {
-        switch (ButtonFunction)
-        {
-            case ButtonFunctionEnum.StopPlaying:
-                _soundService.SetStopPlayingAction();
-                break;
-            case ButtonFunctionEnum.RepeatLastSound:
-                _soundService.SetLastPlayedSoundToRepeat();
-                break;
-            case ButtonFunctionEnum.DoNothing:
-            {
-                _soundService.SetVoidAction();
-                break;
-            }
-            case ButtonFunctionEnum.Quit:
-                Application.Current.Shutdown();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
     }
+
+
+    protected virtual void SetActionToExecute(object? e) => ActionService.SetActionToExecute(ButtonFunction switch
+        {
+            ButtonFunctionEnum.RepeatLastSound => SoundService.RepeatLastPlayedSound,
+            ButtonFunctionEnum.StopPlaying => SoundService.StopPlaying,
+            ButtonFunctionEnum.Quit => Application.Current.Shutdown,
+            ButtonFunctionEnum.DoNothing => VoidAction,
+            _ => VoidAction
+        }
+    );
 }

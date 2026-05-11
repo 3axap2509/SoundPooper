@@ -10,6 +10,7 @@ namespace SoundPooper.MVVM.ViewModels;
 public class SoundPooperViewModel : ViewModelBase
 {
     private readonly ICursorLimiterService _cursorLimiterService;
+    private readonly IActionService _actionService;
     private readonly ISoundService _soundService;
 
     public List<SoundButtonViewModel> SoundListLeftPart { get; init; }
@@ -39,6 +40,7 @@ public class SoundPooperViewModel : ViewModelBase
     public SoundPooperViewModel(
         ICursorLimiterService cursorLimiterService,
         IScreenInfoService screenInfoService,
+        IActionService actionService,
         ISoundService soundService,
         ISoundViewModelFactory soundVmFactory)
     {
@@ -62,6 +64,7 @@ public class SoundPooperViewModel : ViewModelBase
             ).ToList();
 
         _cursorLimiterService = cursorLimiterService;
+        _actionService = actionService;
         _soundService = soundService;
         _windowTopLeftX = (int)screenInfoService.TopLeft.X;
         _windowTopLeftY = (int)screenInfoService.TopLeft.Y;
@@ -91,6 +94,7 @@ public class SoundPooperViewModel : ViewModelBase
     public ActionButtonViewModel StopActionButton =>
         new(
             _soundService,
+            _actionService,
             ButtonFunctionEnum.StopPlaying,
             "Stop"
         );
@@ -98,6 +102,7 @@ public class SoundPooperViewModel : ViewModelBase
     public ActionButtonViewModel RepeatActionButton =>
         new(
             _soundService,
+            _actionService,
             ButtonFunctionEnum.RepeatLastSound,
             "Repeat"
         );
@@ -105,13 +110,15 @@ public class SoundPooperViewModel : ViewModelBase
     public ActionButtonViewModel CancelActionButton =>
         new(
             _soundService,
+            _actionService,
             ButtonFunctionEnum.DoNothing,
             "Cancel"
         );
-    
+
     public ActionButtonViewModel QuitActionButton =>
         new(
             _soundService,
+            _actionService,
             ButtonFunctionEnum.Quit,
             "Quit"
         );
