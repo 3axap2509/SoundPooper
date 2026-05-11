@@ -68,7 +68,6 @@
                     Content="{Binding Title}"
                     Width="100"
                     Height="100"
-                    extensions:ButtonExtensions.CornerRadius="50"
                     Background="Blue">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseEnter">
@@ -82,7 +81,6 @@
                     DataContext="{Binding CancelActionButton}"
                     Width="100"
                     Height="100"
-                    extensions:ButtonExtensions.CornerRadius="50"
                     Background="ForestGreen"
                     Content="{Binding Title}">
                 <i:Interaction.Triggers>
@@ -104,7 +102,6 @@
                     Content="{Binding Title}"
                     Width="100"
                     Height="100"
-                    extensions:ButtonExtensions.CornerRadius="50"
                     Background="DeepPink">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseEnter">
