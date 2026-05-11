@@ -11,10 +11,14 @@ public class SoundPooperViewModel : ViewModelBase
 {
     private readonly ICursorLimiterService _cursorLimiterService;
     private readonly ISoundService _soundService;
+    private int _windowTopLeftX;
+    private int _windowTopLeftY;
+    private float _soundVolume = 0.3f;
+    private int SoundElementHeight { get; }
+    private int SoundElementWidth { get; }
 
-    public List<SoundButtonViewModel> SoundListLeftPart { get; init; }
-    public List<SoundButtonViewModel> SoundListRightPart { get; init; }
 
+    //constructor for data-designer
     public SoundPooperViewModel()
     {
         ContainerWidth = 700;
@@ -49,22 +53,18 @@ public class SoundPooperViewModel : ViewModelBase
     {
         ContainerWidth = 700;
         ContainerHeight = 500;
-        var soundFiles = Directory.GetFiles(
-            "D:\\HehMusic\\test"
-        );
+        var soundFiles = Directory.GetFiles("D:\\HehMusic\\test");
 
         SoundElementHeight = SoundElementWidth = 70;
         var soundsCount = soundFiles.Length;
         SoundListLeftPart = soundFiles
             .Take(soundsCount / 2)
-            .Select(sf =>
-                soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth)
-            ).ToList();
+            .Select(sf => soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth))
+            .ToList();
         SoundListRightPart = soundFiles
             .TakeLast(soundsCount / 2)
-            .Select(sf =>
-                soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth)
-            ).ToList();
+            .Select(sf => soundVmFactory.Create(sf, SoundElementHeight, SoundElementWidth))
+            .ToList();
 
         _cursorLimiterService = cursorLimiterService;
         _soundService = soundService;
@@ -78,11 +78,8 @@ public class SoundPooperViewModel : ViewModelBase
         QuitActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.Quit, "Quit");
     }
 
-    private int _windowTopLeftX;
-    private int _windowTopLeftY;
-    private float _soundVolume = 0.7f;
-    private int SoundElementHeight { get; }
-    private int SoundElementWidth { get; }
+    public List<SoundButtonViewModel> SoundListLeftPart { get; }
+    public List<SoundButtonViewModel> SoundListRightPart { get; }
 
     public int WindowTopLeftX
     {
@@ -112,18 +109,5 @@ public class SoundPooperViewModel : ViewModelBase
             if (!SetField(ref _soundVolume, value)) return;
             _soundService.SetSoundVolume(value);
         }
-    }
-
-
-    private void OnMouseMove(object? e)
-    {
-        if (e is not MouseEventArgs param) return;
-        _cursorLimiterService.CheckAndLimit(
-            param.GetPosition((IInputElement)param.Source),
-            _windowTopLeftX,
-            _windowTopLeftY,
-            150,
-            (p) => p
-        );
     }
 }
