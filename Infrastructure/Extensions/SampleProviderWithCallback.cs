@@ -9,7 +9,6 @@ public class SampleProviderWithCallback(
 {
     private readonly Action<SampleProviderWithCallback>? _onFinishedCallback = onFinishedCallback;
     private bool _isFinished;
-
     public WaveFormat WaveFormat => source.WaveFormat;
 
     public int Read(float[] buffer, int offset, int count)

@@ -14,7 +14,11 @@ public class ActionButtonViewModel : ViewModelBase
     protected readonly ISoundService SoundService;
     protected ButtonFunctionEnum ButtonFunction { get; }
     public string Title { get; init; } = string.Empty;
-    public ICommand MouseEnterCommand => new CommandBase(SetActionToExecute);
+
+    private ICommand? _mouseEnterCommand;
+
+    public ICommand MouseEnterCommand =>
+        _mouseEnterCommand ??= new CommandBase(SetActionToExecute);
 
     public ActionButtonViewModel(
         ISoundService soundService,
@@ -32,8 +36,8 @@ public class ActionButtonViewModel : ViewModelBase
     {
     }
 
-
-    protected virtual void SetActionToExecute(object? e) => ActionService.SetActionToExecute(ButtonFunction switch
+    protected virtual void SetActionToExecute(object? e) => ActionService.SetActionToExecute(
+        ButtonFunction switch
         {
             ButtonFunctionEnum.RepeatLastSound => SoundService.RepeatLastPlayedSound,
             ButtonFunctionEnum.StopPlaying => SoundService.StopPlaying,

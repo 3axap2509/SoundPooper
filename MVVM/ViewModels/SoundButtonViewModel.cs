@@ -21,8 +21,8 @@ public class SoundButtonViewModel : ActionButtonViewModel
         string title,
         string path,
         int height,
-        int width)
-        : base(soundService, actionService, ButtonFunctionEnum.PlaySound, title)
+        int width
+    ) : base(soundService, actionService, ButtonFunctionEnum.PlaySound, title)
     {
         Path = path;
         Height = height;
