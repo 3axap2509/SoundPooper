@@ -14,21 +14,23 @@ public class KeyboardService : IKeyboardService
     private LowLevelKeyboardProc _proc;
     private static IntPtr _hookID = IntPtr.Zero;
 
+    private const Keys BoundKey = Keys.Y;
+
     private readonly Window _view;
     private readonly IScreenInfoService _screenInfoService;
-    private readonly ISoundService _soundService;
+    private readonly IActionService _actionService;
 
     private bool _isPressed;
 
     public KeyboardService(
         Window view,
         IScreenInfoService screenInfoService,
-        ISoundService soundService)
+        IActionService actionService)
     {
         _proc = HookCallback;
         _view = view;
         _screenInfoService = screenInfoService;
-        _soundService = soundService;
+        _actionService = actionService;
         InitializeHooks();
     }
 
@@ -72,7 +74,7 @@ public class KeyboardService : IKeyboardService
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (Marshal.ReadInt32(lParam) != (int)Keys.Oemtilde || nCode < 0)
+        if (Marshal.ReadInt32(lParam) != (int)BoundKey || nCode < 0)
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
 
         GetCursorPos(out var trueResPoint);
@@ -92,8 +94,7 @@ public class KeyboardService : IKeyboardService
             case WmKeyUp:
                 _isPressed = false;
                 _view.Hide();
-                _soundService.ExecuteCurrentAction();
-                Console.WriteLine("KeyUp");
+                _actionService.ExecuteCurrentAction();
                 break;
         }
 
