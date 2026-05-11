@@ -1,5 +1,4 @@
 using SoundPooper.Infrastructure.IoC;
-using Unity;
 
 namespace SoundPooper.MVVM.ViewModels;
 

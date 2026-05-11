@@ -10,7 +10,6 @@ namespace SoundPooper.MVVM.ViewModels;
 public class SoundPooperViewModel : ViewModelBase
 {
     private readonly ICursorLimiterService _cursorLimiterService;
-    private readonly IActionService _actionService;
     private readonly ISoundService _soundService;
 
     public List<SoundButtonViewModel> SoundListLeftPart { get; init; }
@@ -35,14 +34,18 @@ public class SoundPooperViewModel : ViewModelBase
             new SoundButtonViewModel() { Title = "heh7", Height = SoundElementHeight, Width = SoundElementWidth },
             new SoundButtonViewModel() { Title = "heh8", Height = SoundElementHeight, Width = SoundElementWidth }
         ];
+        RepeatActionButton = new(null, null, ButtonFunctionEnum.RepeatLastSound, "Repeat");
+        CancelActionButton = new(null, null, ButtonFunctionEnum.DoNothing, "Cancel");
+        StopActionButton = new(null, null, ButtonFunctionEnum.StopPlaying, "Stop");
+        QuitActionButton = new(null, null, ButtonFunctionEnum.Quit, "Quit");
     }
 
     public SoundPooperViewModel(
         ICursorLimiterService cursorLimiterService,
         IScreenInfoService screenInfoService,
-        IActionService actionService,
         ISoundService soundService,
-        ISoundViewModelFactory soundVmFactory)
+        ISoundViewModelFactory soundVmFactory,
+        IActionButtonViewModelFactory actionButtonVmFactory)
     {
         ContainerWidth = 700;
         ContainerHeight = 500;
@@ -64,10 +67,15 @@ public class SoundPooperViewModel : ViewModelBase
             ).ToList();
 
         _cursorLimiterService = cursorLimiterService;
-        _actionService = actionService;
         _soundService = soundService;
+
         _windowTopLeftX = (int)screenInfoService.TopLeft.X;
         _windowTopLeftY = (int)screenInfoService.TopLeft.Y;
+
+        RepeatActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.RepeatLastSound, "Repeat");
+        StopActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.StopPlaying, "Stop");
+        CancelActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.DoNothing, "Cancel");
+        QuitActionButton = actionButtonVmFactory.Create(ButtonFunctionEnum.Quit, "Quit");
     }
 
     private int _windowTopLeftX;
@@ -91,37 +99,10 @@ public class SoundPooperViewModel : ViewModelBase
     public int ContainerHeight { get; }
     public int ContainerWidth { get; }
 
-    public ActionButtonViewModel StopActionButton =>
-        new(
-            _soundService,
-            _actionService,
-            ButtonFunctionEnum.StopPlaying,
-            "Stop"
-        );
-
-    public ActionButtonViewModel RepeatActionButton =>
-        new(
-            _soundService,
-            _actionService,
-            ButtonFunctionEnum.RepeatLastSound,
-            "Repeat"
-        );
-
-    public ActionButtonViewModel CancelActionButton =>
-        new(
-            _soundService,
-            _actionService,
-            ButtonFunctionEnum.DoNothing,
-            "Cancel"
-        );
-
-    public ActionButtonViewModel QuitActionButton =>
-        new(
-            _soundService,
-            _actionService,
-            ButtonFunctionEnum.Quit,
-            "Quit"
-        );
+    public ActionButtonViewModel StopActionButton { get; }
+    public ActionButtonViewModel RepeatActionButton { get; }
+    public ActionButtonViewModel CancelActionButton { get; }
+    public ActionButtonViewModel QuitActionButton { get; }
 
     public float SoundVolume
     {

@@ -27,6 +27,7 @@ public static class IocManager
         Container.RegisterSingleton<IActionService, ActionService>();
         Container.RegisterSingleton<ISoundService, SoundService>();
         Container.RegisterSingleton<ISoundViewModelFactory, SoundViewModelFactory>();
+        Container.RegisterSingleton<IActionButtonViewModelFactory, ActionButtonViewModelFactory>();
 
         //MVVM
         Container.RegisterSingleton<SoundPooperViewModel>();
