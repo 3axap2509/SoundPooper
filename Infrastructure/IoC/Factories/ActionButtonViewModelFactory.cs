@@ -9,17 +9,11 @@ public interface IActionButtonViewModelFactory
     ActionButtonViewModel Create(ButtonFunctionEnum buttonFunction, string title);
 }
 
-public class ActionButtonViewModelFactory : IActionButtonViewModelFactory
+public class ActionButtonViewModelFactory(
+    ISoundService soundService,
+    IActionService actionService
+) : IActionButtonViewModelFactory
 {
-    private ISoundService _soundService;
-    private IActionService _actionService;
-
-    public ActionButtonViewModelFactory(ISoundService soundService, IActionService actionService)
-    {
-        _soundService = soundService;
-        _actionService = actionService;
-    }
-
     public ActionButtonViewModel Create(ButtonFunctionEnum buttonFunction, string title) =>
-        new(_soundService, _actionService, buttonFunction, title);
+        new(soundService, actionService, buttonFunction, title);
 }
