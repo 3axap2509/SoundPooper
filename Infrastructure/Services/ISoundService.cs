@@ -3,10 +3,8 @@ namespace SoundPooper.Infrastructure.Services;
 public interface ISoundService
 {
     void Initialize();
-    void ExecuteCurrentAction();
-    void SetPlaySoundAction(string soundPath);
-    void SetStopPlayingAction();
-    void SetLastPlayedSoundToRepeat();
-    void SetVoidAction();
+    void PlaySound(string soundPath);
+    void StopPlaying();
+    void RepeatLastPlayedSound();
     void SetSoundVolume(float value);
 }

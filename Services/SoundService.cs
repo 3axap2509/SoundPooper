@@ -1,126 +1,117 @@
 using NAudio.CoreAudioApi;
-using SoundPooper.Infrastructure.Services;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
-using SoundPooper.Modules;
+using SoundPooper.Infrastructure.Extensions;
+using SoundPooper.Infrastructure.Services;
 
 namespace SoundPooper.Services;
 
 public class SoundService : ISoundService
 {
-    //private const string MicrophoneKeyString = "Razer";
-    private const string MicrophoneKeyString = "NVIDIA";
-    
-    private readonly int _cutOffFrequency = 2000;
-    private readonly List<ISampleProvider> _mixerInputs = new();
-    
-    
-    private AsioOut? _asioOut;
-    private BufferedWaveProvider? _micBuffer;
+    // private const string MicrophoneKey = "NVIDIA";
+
+    // private const string OutputDeviceKey = "CABLE Input";
+    private const string OutputDeviceKey = "SteelSeries Sonar - Aux";
+    private static readonly WaveFormat WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2);
+
+
+    private WasapiCapture? _capture;
+    private BufferedWaveProvider? _bufferedWaveProvider;
     private MixingSampleProvider? _mainMixer;
     private MixingSampleProvider? _soundMixer;
-    private VolumeSampleProvider? _soundVolume;
+    private VolumeSampleProvider? _soundVolumeProvider;
+    private WasapiOut? _virtualOutput;
 
-    private WasapiCapture? _micCapture;
-    private WasapiOut? _virtualMicOut;
-    private ISampleProvider? _micSampleProvider;
-
+    private readonly List<AudioFileReader> _activeFileReaders = [];
+    private readonly List<ISampleProvider> _activeSoundProviders = [];
     private string _lastPlayedSoundPath = string.Empty;
-    private Action _actionToExecute = EmptyAction;
-    private static Action EmptyAction => () => { };
-
 
     public void Initialize()
     {
-        var inputDevicesList = new MMDeviceEnumerator()
-            .EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
-        var outputDevicesList = new MMDeviceEnumerator()
-            .EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
-        var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(44100, 2);
-        var drivers = AsioOut.GetDriverNames();
-        var asioDriverName = drivers.FirstOrDefault(d => d.Contains("ASIO4ALL"));
-        if (asioDriverName == null)
-        {
-            throw new Exception("ASIO4ALL драйвер не найден!");
-        }
-        _asioOut = new AsioOut(asioDriverName);
-        // 1. Microphone
-        var micDevice = inputDevicesList.First(d => d.FriendlyName.Contains(MicrophoneKeyString));
-        _micCapture = new WasapiCapture(micDevice) { WaveFormat = waveFormat };
-        _micBuffer = new BufferedWaveProvider(_micCapture.WaveFormat);
-        _micCapture.DataAvailable += (s, e) =>
-            _micBuffer.AddSamples(e.Buffer, 0, e.BytesRecorded);
-        _micCapture.StartRecording();
-        _micSampleProvider = _micBuffer.ToSampleProvider();
-        //_micSampleProvider = new NoiseSuppressorProvider(_micBuffer.ToSampleProvider(), _cutOffFrequency);
-        
-        // 2. Sound mixer
-        _soundMixer = new MixingSampleProvider(waveFormat) { ReadFully = true };
-        _soundVolume = new VolumeSampleProvider(_soundMixer) { Volume = 1f };
-        // 3. Main mixer
-        _mainMixer = new MixingSampleProvider(waveFormat) { ReadFully = true };
-        _mainMixer.AddMixerInput(_soundVolume);
-        _mainMixer.AddMixerInput(_micSampleProvider);
+        // var inputDevice = new MMDeviceEnumerator()
+        //     .EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)
+        //     .First(d => d.FriendlyName.Contains(MicrophoneKey));
+        //
+        // _capture = new WasapiCapture(inputDevice, true); // Exclusive mode
+        // _capture.WaveFormat = waveFormat;
+        //
+        // _bufferedWaveProvider = new BufferedWaveProvider(_capture.WaveFormat)
+        // {
+        //     DiscardOnBufferOverflow = true,
+        //     BufferDuration = TimeSpan.FromMilliseconds(100) // было 5 секунд!
+        // };
+        //
+        // _capture.DataAvailable += (s, e) =>
+        //     _bufferedWaveProvider.AddSamples(e.Buffer, 0, e.BytesRecorded);
+        // _capture.StartRecording();
 
-        // // 3. To output device (VB-Cable)
-        // var virtualMicDevice = outputDevicesList
-        //     .First(
-        //         mic => mic.FriendlyName.Equals(
-        //             "CABLE Input (VB-Audio Virtual Cable)",
-        //             StringComparison.InvariantCulture
-        //         )
-        //     );
-        //
-        //
-        // // ищем виртуальный кабель
-        // _virtualMicOut = new WasapiOut(
-        //     virtualMicDevice,
-        //     AudioClientShareMode.Exclusive,
-        //     true,
-        //     20
-        // );
-        // _virtualMicOut.Init(_mainMixer);
-        // _virtualMicOut.Play();
-        
-        _asioOut.Init(_mainMixer);
-        _asioOut.Play();
-        _asioOut.ShowControlPanel();
+        _soundMixer = new MixingSampleProvider(WaveFormat)
+        {
+            ReadFully = true
+        };
+        _soundVolumeProvider = new VolumeSampleProvider(_soundMixer)
+        {
+            Volume = 0.3f
+        };
+        _mainMixer = new MixingSampleProvider(WaveFormat)
+        {
+            ReadFully = true
+        };
+
+        // _mainMixer.AddMixerInput(_bufferedWaveProvider.ToSampleProvider());
+        _mainMixer.AddMixerInput(_soundVolumeProvider);
+
+        var outputDevice = new MMDeviceEnumerator()
+            .EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
+            .First(d => d.FriendlyName.Contains(OutputDeviceKey));
+
+        _virtualOutput = new WasapiOut(
+            outputDevice,
+            AudioClientShareMode.Shared,
+            useEventSync: false,
+            latency: 10
+        );
+
+        _virtualOutput.Init(_mainMixer);
+        _virtualOutput.Play();
     }
 
-
-    public void SetPlaySoundAction(string soundPath) =>
-        _actionToExecute = () =>
-        {
-            using var reader = new AudioFileReader(soundPath);
-            var resampled = new WdlResamplingSampleProvider(reader, _soundMixer!.WaveFormat.SampleRate);
-            ISampleProvider stereo = resampled.WaveFormat.Channels == 1
-                ? new MonoToStereoSampleProvider(resampled)
-                : resampled;
-            _soundMixer.AddMixerInput(stereo);
-            _mixerInputs!.Add(stereo);
-            _lastPlayedSoundPath = soundPath;
-
-            //if (_virtualMicOut!.PlaybackState == PlaybackState.Playing) return;
-            _virtualMicOut.Play();
-        };
-
-    public void SetStopPlayingAction() =>
-        _actionToExecute = () =>
-        {
-            _mixerInputs!.ForEach(input => _soundMixer!.RemoveMixerInput(input));
-            _mixerInputs.Clear();
-        };
-
-    public void SetLastPlayedSoundToRepeat() =>
-        SetPlaySoundAction(_lastPlayedSoundPath);
-
-    public void SetVoidAction() => _actionToExecute = EmptyAction;
-
-    public void SetSoundVolume(float value)
+    public void PlaySound(string soundPath)
     {
-        _soundVolume!.Volume = Math.Clamp(value, 0, 1);
+        if (string.IsNullOrEmpty(soundPath)) return;
+
+        var reader = new AudioFileReader(soundPath);
+        var resamplingProvider = new WdlResamplingSampleProvider(reader, WaveFormat.SampleRate);
+        var selfRemovableProvider = new SampleProviderWithCallback(
+            resamplingProvider,
+            self =>
+            {
+                _soundMixer!.RemoveMixerInput(self);
+                _activeSoundProviders.Remove(self);
+                _activeFileReaders.Remove(reader);
+                reader.Dispose();
+            }
+        );
+
+        _soundMixer!.AddMixerInput(selfRemovableProvider);
+        _activeSoundProviders.Add(selfRemovableProvider);
+        _activeFileReaders.Add(reader);
+        _lastPlayedSoundPath = soundPath;
+
+        if (_virtualOutput!.PlaybackState != PlaybackState.Playing)
+            _virtualOutput.Play();
     }
 
+    public void RepeatLastPlayedSound() => PlaySound(_lastPlayedSoundPath);
 
-    public void ExecuteCurrentAction() => _actionToExecute?.Invoke();
+    public void StopPlaying()
+    {
+        _activeSoundProviders.ForEach(sound => _soundMixer!.RemoveMixerInput(sound));
+        _activeSoundProviders.Clear();
+
+        _activeFileReaders.ForEach(reader => reader.Dispose());
+        _activeFileReaders.Clear();
+    }
+
+    public void SetSoundVolume(float value) => _soundVolumeProvider!.Volume = Math.Clamp(value, 0f, 1f);
 }
