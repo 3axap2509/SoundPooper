@@ -11,6 +11,8 @@ public class KeyboardService : IKeyboardService
     private const int WhKeyboardLl = 13;
     private const int WmKeyDown = 0x0100;
     private const int WmKeyUp = 0x0101;
+    private const int HoldDelayMs = 100;
+
     private LowLevelKeyboardProc _proc;
     private static IntPtr _hookID = IntPtr.Zero;
 
@@ -21,6 +23,8 @@ public class KeyboardService : IKeyboardService
     private readonly IActionService _actionService;
 
     private bool _isPressed;
+    private bool _windowShowed;
+    private long lastPressedTimestamp = 0;
 
     public KeyboardService(
         Window view,
@@ -72,6 +76,7 @@ public class KeyboardService : IKeyboardService
         IntPtr lParam
     );
 
+
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
     {
         if (Marshal.ReadInt32(lParam) != (int)BoundKey || nCode < 0)
@@ -81,26 +86,38 @@ public class KeyboardService : IKeyboardService
         var dpiPoint = _screenInfoService.ToDpiPoint(trueResPoint.X, trueResPoint.Y);
         switch (wParam)
         {
+            case WmKeyDown when _isPressed && _windowShowed:
+                break;
             case WmKeyDown when _isPressed:
+                _windowShowed = Stopwatch.GetElapsedTime(lastPressedTimestamp).TotalMilliseconds > HoldDelayMs;
+                if (_windowShowed)
+                {
+                    _view.Left = dpiPoint.X - _view.Width / 2;
+                    _view.Top = dpiPoint.Y - _view.Height / 2;
+                    _view.Show();
+                    _view.Activate();
+                    _view.Focus();
+                }
+
                 break;
             case WmKeyDown:
                 _isPressed = true;
-                _view.Left = dpiPoint.X - _view.Width / 2;
-                _view.Top = dpiPoint.Y - _view.Height / 2;
-                _view.Show();
-                _view.Activate();
-                _view.Focus();
+                lastPressedTimestamp = Stopwatch.GetTimestamp();
                 break;
             case WmKeyUp:
+                if (_isPressed && _windowShowed)
+                {
+                    _view.Hide();
+                    _actionService.ExecuteCurrentAction();
+                }
+
                 _isPressed = false;
-                _view.Hide();
-                _actionService.ExecuteCurrentAction();
+                _windowShowed = false;
                 break;
         }
 
         return CallNextHookEx(_hookID, nCode, wParam, lParam);
     }
-
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern IntPtr GetModuleHandle(string lpModuleName);
