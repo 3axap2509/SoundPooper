@@ -1,31 +1,62 @@
-using System;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace SoundPooper.UserControls
 {
     public partial class CircularSlider : UserControl
     {
+        private const double DefaultMinimumValue = 0;
+        private const double DefaultMaximumValue = 100;
+        private const double DefaultValue = 0;
+        private const double MinAngle = -90;
+        private const double MaxAngle = 90;
+        private const double SweepAngle = MaxAngle - MinAngle;
+
+        private bool _isDragging;
+        private Point _center;
+        private double _radius; // радиус дорожки
+        private double _thumbRadius;
+        private double _innerRadius; // радиус внутреннего сектора
+
         public static readonly DependencyProperty MinimumProperty =
-            DependencyProperty.Register(nameof(Minimum), typeof(double), typeof(CircularSlider),
-                new FrameworkPropertyMetadata(0.0, OnRangeChanged));
+            DependencyProperty.Register(
+                nameof(Minimum),
+                typeof(double),
+                typeof(CircularSlider),
+                new FrameworkPropertyMetadata(DefaultMinimumValue, OnRangeChanged)
+            );
 
         public static readonly DependencyProperty MaximumProperty =
-            DependencyProperty.Register(nameof(Maximum), typeof(double), typeof(CircularSlider),
-                new FrameworkPropertyMetadata(100.0, OnRangeChanged));
+            DependencyProperty.Register(
+                nameof(Maximum),
+                typeof(double),
+                typeof(CircularSlider),
+                new FrameworkPropertyMetadata(DefaultMaximumValue, OnRangeChanged)
+            );
 
         public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register(nameof(Value), typeof(double), typeof(CircularSlider),
-                new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
-                    OnValueChanged, CoerceValue));
+            DependencyProperty.Register(
+                nameof(Value),
+                typeof(double),
+                typeof(CircularSlider),
+                new FrameworkPropertyMetadata(
+                    DefaultValue,
+                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    OnValueChanged,
+                    CoerceValue
+                )
+            );
 
         public static readonly DependencyProperty SmallChangeProperty =
-            DependencyProperty.Register(nameof(SmallChange), typeof(double), typeof(CircularSlider),
-                new PropertyMetadata(1.0));
+            DependencyProperty.Register(
+                nameof(SmallChange),
+                typeof(double),
+                typeof(CircularSlider),
+                new PropertyMetadata(1.0)
+            );
+
 
         public double Minimum
         {
@@ -51,17 +82,6 @@ namespace SoundPooper.UserControls
             set => SetValue(SmallChangeProperty, value);
         }
 
-        // Углы в градусах
-        private const double MinAngle = -90;
-        private const double MaxAngle = 90;
-        private const double SweepAngle = MaxAngle - MinAngle;
-
-        private bool _isDragging;
-        private Point _center;
-        private double _radius; // радиус дорожки
-        private double _thumbRadius;
-        private double _innerRadius; // радиус внутреннего сектора
-
         public CircularSlider()
         {
             InitializeComponent();
@@ -71,11 +91,10 @@ namespace SoundPooper.UserControls
         {
             if (_innerRadius <= 0 || ValueText == null) return;
 
-            // Позиция: по горизонтали — центр, по вертикали — чуть ниже центра (на 30% внутреннего радиуса вниз)
-            double x = _center.X;
-            double y = _center.Y - _innerRadius * 0.8;
+            var x = _center.X;
+            var y = _center.Y - _innerRadius;
 
-            ValueText.Text = Value.ToString("0.00"); // или "0.0" для дробных
+            ValueText.Text = Value.ToString("0%");
             ValueText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
             Canvas.SetLeft(ValueText, x - ValueText.DesiredSize.Width / 2);
             Canvas.SetTop(ValueText, y + ValueText.DesiredSize.Height / 2);
@@ -92,8 +111,8 @@ namespace SoundPooper.UserControls
         private static object CoerceValue(DependencyObject d, object baseValue)
         {
             var slider = (CircularSlider)d;
-            double val = (double)baseValue;
-            return Math.Max(slider.Minimum, Math.Min(slider.Maximum, val));
+            var val = (double)baseValue;
+            return Math.Clamp(val, slider.Minimum, slider.Maximum);
         }
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -117,12 +136,12 @@ namespace SoundPooper.UserControls
 
         private void CalculateGeometry()
         {
-            double w = MainCanvas.ActualWidth;
-            double h = MainCanvas.ActualHeight;
+            var w = MainCanvas.ActualWidth;
+            var h = MainCanvas.ActualHeight;
             _center = new Point(w / 2, h / 2);
             _thumbRadius = Thumb.Width / 2;
 
-            double margin = Math.Max(TrackPath.StrokeThickness / 2, _thumbRadius);
+            var margin = Math.Max(TrackPath.StrokeThickness / 2, _thumbRadius);
             _radius = Math.Min(w, h) / 2 - margin;
             _innerRadius = _radius - TrackPath.StrokeThickness - 2;
         }
@@ -160,8 +179,8 @@ namespace SoundPooper.UserControls
         {
             if (_innerRadius <= 0) return;
 
-            double percent = (Value - Minimum) / (Maximum - Minimum);
-            double currentAngle = MinAngle + percent * SweepAngle;
+            var percent = (Value - Minimum) / (Maximum - Minimum);
+            var currentAngle = MinAngle + percent * SweepAngle;
 
             var startPoint = GetPointOnCircle(MinAngle, _innerRadius);
             var endPoint = GetPointOnCircle(currentAngle, _innerRadius);
@@ -205,17 +224,17 @@ namespace SoundPooper.UserControls
 
         private Point GetPointOnCircle(double angleDeg, double radius)
         {
-            double rad = angleDeg * Math.PI / 180;
-            double x = _center.X + radius * Math.Sin(rad);
-            double y = _center.Y - radius * Math.Cos(rad);
+            var rad = angleDeg * Math.PI / 180;
+            var x = _center.X + radius * Math.Sin(rad);
+            var y = _center.Y - radius * Math.Cos(rad);
             return new Point(x, y);
         }
 
         private void UpdateThumbPosition()
         {
-            double percent = (Value - Minimum) / (Maximum - Minimum);
-            double angleDeg = MinAngle + percent * SweepAngle;
-            Point pos = GetPointOnCircle(angleDeg, _radius);
+            var percent = (Value - Minimum) / (Maximum - Minimum);
+            var angleDeg = MinAngle + percent * SweepAngle;
+            var pos = GetPointOnCircle(angleDeg, _radius);
             Canvas.SetLeft(Thumb, pos.X - _thumbRadius);
             Canvas.SetTop(Thumb, pos.Y - _thumbRadius);
         }
@@ -223,8 +242,8 @@ namespace SoundPooper.UserControls
         // Прокрутка мыши
         private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            double delta = e.Delta > 0 ? SmallChange : -SmallChange;
-            double newValue = Value + delta;
+            var delta = e.Delta > 0 ? SmallChange : -SmallChange;
+            var newValue = Value + delta;
             Value = Math.Max(Minimum, Math.Min(Maximum, newValue));
             e.Handled = true;
         }
@@ -251,14 +270,14 @@ namespace SoundPooper.UserControls
 
         private void UpdateValueFromMouse(Point mousePos)
         {
-            double dx = mousePos.X - _center.X;
-            double dy = _center.Y - mousePos.Y;
-            double angleRad = Math.Atan2(dy, dx);
-            double angleDeg = 90 - angleRad * 180 / Math.PI;
+            var dx = mousePos.X - _center.X;
+            var dy = _center.Y - mousePos.Y;
+            var angleRad = Math.Atan2(dy, dx);
+            var angleDeg = 90 - angleRad * 180 / Math.PI;
 
-            double clampedAngle = Math.Max(MinAngle, Math.Min(MaxAngle, angleDeg));
-            double percent = (clampedAngle - MinAngle) / SweepAngle;
-            double newValue = Minimum + percent * (Maximum - Minimum);
+            var clampedAngle = Math.Max(MinAngle, Math.Min(MaxAngle, angleDeg));
+            var percent = (clampedAngle - MinAngle) / SweepAngle;
+            var newValue = Minimum + percent * (Maximum - Minimum);
             Value = Math.Round(newValue, 2);
         }
     }

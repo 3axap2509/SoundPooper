@@ -30,7 +30,7 @@
         <!-- Текст текущего значения -->
         <TextBlock x:Name="ValueText"
                    Foreground="White"
-                   FontSize="12"
+                   FontSize="16"
                    FontWeight="Bold"
                    TextAlignment="Center"
                    Text="0"/>
