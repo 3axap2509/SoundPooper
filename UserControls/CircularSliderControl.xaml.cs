@@ -5,6 +5,7 @@ using System.Windows.Media;
 
 namespace SoundPooper.UserControls
 {
+    // this is AI-created user-control, be careful with your changes
     public partial class CircularSlider : UserControl
     {
         private const double DefaultMinimumValue = 0;
@@ -16,9 +17,9 @@ namespace SoundPooper.UserControls
 
         private bool _isDragging;
         private Point _center;
-        private double _radius; // радиус дорожки
+        private double _radius;
         private double _thumbRadius;
-        private double _innerRadius; // радиус внутреннего сектора
+        private double _innerRadius;
 
         public static readonly DependencyProperty MinimumProperty =
             DependencyProperty.Register(
@@ -146,7 +147,7 @@ namespace SoundPooper.UserControls
             _innerRadius = _radius - TrackPath.StrokeThickness - 2;
         }
 
-        // Фон – сектор (pie shape) от MinAngle до MaxAngle
+        // Pie shaped background
         private void UpdateBackground()
         {
             if (_innerRadius <= 0) return;
@@ -155,9 +156,9 @@ namespace SoundPooper.UserControls
             var endPoint = GetPointOnCircle(MaxAngle, _innerRadius);
 
             var figure = new PathFigure { StartPoint = _center, IsClosed = true };
-            // От центра к начальной точке
+            // Line from center to 'Minimal value' point
             figure.Segments.Add(new LineSegment(startPoint, true));
-            // Дуга до конечной точки
+            // Line from 'Minimal value' point to 'Maximum value'
             figure.Segments.Add(new ArcSegment
             {
                 Point = endPoint,
@@ -166,7 +167,7 @@ namespace SoundPooper.UserControls
                 SweepDirection = SweepDirection.Clockwise,
                 IsSmoothJoin = true
             });
-            // Линия назад к центру
+            // Line from 'Maximum value' back to the center
             figure.Segments.Add(new LineSegment(_center, true));
 
             var geometry = new PathGeometry();
@@ -174,7 +175,7 @@ namespace SoundPooper.UserControls
             BackgroundPath.Data = geometry;
         }
 
-        // Цветная дуга от минимального до текущего значения
+        // Colored arc from 'Minimal value' point to 'Current value'
         private void UpdateGaugeArc()
         {
             if (_innerRadius <= 0) return;
@@ -239,7 +240,6 @@ namespace SoundPooper.UserControls
             Canvas.SetTop(Thumb, pos.Y - _thumbRadius);
         }
 
-        // Прокрутка мыши
         private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             var delta = e.Delta > 0 ? SmallChange : -SmallChange;
@@ -248,7 +248,6 @@ namespace SoundPooper.UserControls
             e.Handled = true;
         }
 
-        // Перетаскивание бегунка
         private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             MainCanvas.CaptureMouse();
