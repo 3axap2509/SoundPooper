@@ -54,6 +54,7 @@ public class SoundPooperViewModel : ViewModelBase
 
         ContainerWidth = 700;
         ContainerHeight = 500;
+        //todo: add customizable sounds-directory 
         var soundFiles = Directory.GetFiles("D:\\HehMusic\\test");
 
         SoundElementHeight = SoundElementWidth = 70;

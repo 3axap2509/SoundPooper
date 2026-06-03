@@ -11,6 +11,10 @@ public class SoundService : ISoundService
     // private const string MicrophoneKey = "NVIDIA";
 
     // private const string OutputDeviceKey = "CABLE Input";
+    //todo: add both options available:
+    //todo: 1) in-out devices with microphone-wrapping (for example VB-Cable)
+    //todo: 2) out-only device (for example SteelSeries Sonar)
+    
     private const string OutputDeviceKey = "SteelSeries Sonar - Aux";
     private static readonly WaveFormat WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2);
 
@@ -28,6 +32,7 @@ public class SoundService : ISoundService
 
     public void Initialize()
     {
+        //todo: microphone wrapping
         // var inputDevice = new MMDeviceEnumerator()
         //     .EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active)
         //     .First(d => d.FriendlyName.Contains(MicrophoneKey));
