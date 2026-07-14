@@ -6,7 +6,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="MVVM/Styles/WrapPanelStyles.xaml" />
-                <ResourceDictionary Source="MVVM/Styles/ButtonStyle.xaml" />
+                <ResourceDictionary Source="MVVM/Styles/ButtonStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <vm:ViewModelLocator x:Key="Locator" />
         </ResourceDictionary>
