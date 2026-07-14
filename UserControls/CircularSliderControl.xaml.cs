@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -16,10 +17,12 @@ namespace SoundPooper.UserControls
         private const double SweepAngle = MaxAngle - MinAngle;
 
         private bool _isDragging;
-        private Point _center;
+        private Point _bottomCenter;
         private double _radius;
         private double _thumbRadius;
         private double _innerRadius;
+
+        #region Dependency Properties
 
         public static readonly DependencyProperty MinimumProperty =
             DependencyProperty.Register(
@@ -58,6 +61,9 @@ namespace SoundPooper.UserControls
                 new PropertyMetadata(1.0)
             );
 
+        #endregion
+
+        #region Properties
 
         public double Minimum
         {
@@ -83,17 +89,36 @@ namespace SoundPooper.UserControls
             set => SetValue(SmallChangeProperty, value);
         }
 
+        #endregion
+
         public CircularSlider()
         {
             InitializeComponent();
+        }
+
+        protected override Size ArrangeOverride(Size arrangeBounds)
+        {
+            var finalSize = base.ArrangeOverride(arrangeBounds);
+
+            if (finalSize.Width > 0 && finalSize.Height > 0)
+            {
+                CalculateGeometry();
+                UpdateBackground();
+                UpdateGaugeArc();
+                UpdateTrackPath();
+                UpdateThumbPosition();
+                UpdateValueText();
+            }
+
+            return finalSize;
         }
 
         private void UpdateValueText()
         {
             if (_innerRadius <= 0 || ValueText == null) return;
 
-            var x = _center.X;
-            var y = _center.Y - _innerRadius;
+            var x = _bottomCenter.X;
+            var y = _bottomCenter.Y - _innerRadius;
 
             ValueText.Text = Value.ToString("0%");
             ValueText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
@@ -124,27 +149,28 @@ namespace SoundPooper.UserControls
             slider.UpdateValueText();
         }
 
-
-        private void Canvas_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            CalculateGeometry();
-            UpdateBackground();
-            UpdateGaugeArc();
-            UpdateTrackPath();
-            UpdateThumbPosition();
-            UpdateValueText();
-        }
-
         private void CalculateGeometry()
         {
-            var w = MainCanvas.ActualWidth;
-            var h = MainCanvas.ActualHeight;
-            _center = new Point(w / 2, h / 2);
-            _thumbRadius = Thumb.Width / 2;
+            var w = this.ActualWidth;
+            var h = this.ActualHeight;
 
-            var margin = Math.Max(TrackPath.StrokeThickness / 2, _thumbRadius);
-            _radius = Math.Min(w, h) / 2 - margin;
-            _innerRadius = _radius - TrackPath.StrokeThickness - 2;
+            if (w < 1 || double.IsNaN(w)) w = this.Width;
+            if (h < 1 || double.IsNaN(h)) h = this.Height;
+            if (double.IsNaN(w)) w = 100;
+            if (double.IsNaN(h)) h = 50;
+
+            _bottomCenter = new Point(w / 2, h);
+
+            var thumbWidth = Thumb != null && !double.IsNaN(Thumb.Width) ? Thumb.Width : 16;
+            _thumbRadius = thumbWidth / 2;
+
+            var trackThickness = TrackPath != null && !double.IsNaN(TrackPath.StrokeThickness)
+                ? TrackPath.StrokeThickness
+                : 6;
+
+            var margin = Math.Max(trackThickness / 2, _thumbRadius);
+            _radius = w / 2 - margin;
+            _innerRadius = _radius - trackThickness - 2;
         }
 
         // Pie shaped background
@@ -155,7 +181,7 @@ namespace SoundPooper.UserControls
             var startPoint = GetPointOnCircle(MinAngle, _innerRadius);
             var endPoint = GetPointOnCircle(MaxAngle, _innerRadius);
 
-            var figure = new PathFigure { StartPoint = _center, IsClosed = true };
+            var figure = new PathFigure { StartPoint = _bottomCenter, IsClosed = true };
             // Line from center to 'Minimal value' point
             figure.Segments.Add(new LineSegment(startPoint, true));
             // Line from 'Minimal value' point to 'Maximum value'
@@ -168,7 +194,7 @@ namespace SoundPooper.UserControls
                 IsSmoothJoin = true
             });
             // Line from 'Maximum value' back to the center
-            figure.Segments.Add(new LineSegment(_center, true));
+            figure.Segments.Add(new LineSegment(_bottomCenter, true));
 
             var geometry = new PathGeometry();
             geometry.Figures.Add(figure);
@@ -226,8 +252,8 @@ namespace SoundPooper.UserControls
         private Point GetPointOnCircle(double angleDeg, double radius)
         {
             var rad = angleDeg * Math.PI / 180;
-            var x = _center.X + radius * Math.Sin(rad);
-            var y = _center.Y - radius * Math.Cos(rad);
+            var x = _bottomCenter.X + radius * Math.Sin(rad);
+            var y = _bottomCenter.Y - radius * Math.Cos(rad);
             return new Point(x, y);
         }
 
@@ -269,8 +295,8 @@ namespace SoundPooper.UserControls
 
         private void UpdateValueFromMouse(Point mousePos)
         {
-            var dx = mousePos.X - _center.X;
-            var dy = _center.Y - mousePos.Y;
+            var dx = mousePos.X - _bottomCenter.X;
+            var dy = _bottomCenter.Y - mousePos.Y;
             var angleRad = Math.Atan2(dy, dx);
             var angleDeg = 90 - angleRad * 180 / Math.PI;
 

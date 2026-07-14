@@ -1,44 +1,49 @@
 <UserControl x:Class="SoundPooper.UserControls.CircularSlider"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             Width="100" Height="100"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             Background="Transparent"
+             d:DesignHeight="50"
+             d:DesignWidth="100"
+             Width="100" Height="50"
              PreviewMouseWheel="UserControl_PreviewMouseWheel">
     <Canvas x:Name="MainCanvas"
             Background="Transparent"
             MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
             MouseMove="Canvas_MouseMove"
-            MouseLeftButtonUp="Canvas_MouseLeftButtonUp"
-            SizeChanged="Canvas_SizeChanged">
+            MouseLeftButtonUp="Canvas_MouseLeftButtonUp">
         <!-- Залитый сектор-фон (тёмный) -->
         <Path x:Name="BackgroundPath"
               Fill="#FF2B2B2B"
-              Stroke="Transparent"/>
+              Stroke="Transparent" />
         <!-- Цветная дуга шкалы от минимума до значения -->
         <Path x:Name="GaugeArc"
-              Stroke="#FF4A90E2"
+              Stroke="Red"
               StrokeThickness="4"
               StrokeStartLineCap="Round"
               StrokeEndLineCap="Round"
-              Fill="Transparent"/>
+              Fill="Transparent" />
         <!-- Основная дорожка -->
         <Path x:Name="TrackPath"
               Stroke="#FF4A90E2"
               StrokeThickness="6"
               StrokeStartLineCap="Round"
               StrokeEndLineCap="Round"
-              Fill="Transparent"/>
+              Fill="Transparent" />
         <!-- Текст текущего значения -->
         <TextBlock x:Name="ValueText"
                    Foreground="White"
                    FontSize="16"
                    FontWeight="Bold"
                    TextAlignment="Center"
-                   Text="0"/>
+                   Text="0" />
         <!-- Бегунок -->
         <Ellipse x:Name="Thumb"
                  Width="16" Height="16"
                  Fill="White"
-                 Stroke="#FF4A90E2"
-                 StrokeThickness="2"/>
+                 Stroke="ForestGreen"
+                 StrokeThickness="2" />
     </Canvas>
 </UserControl>
