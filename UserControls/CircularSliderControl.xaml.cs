@@ -6,7 +6,6 @@ using System.Windows.Media;
 
 namespace SoundPooper.UserControls
 {
-    // this is AI-created user-control, be careful with your changes
     public partial class CircularSlider : UserControl
     {
         private const double DefaultMinimumValue = 0;
@@ -21,6 +20,7 @@ namespace SoundPooper.UserControls
         private double _radius;
         private double _thumbRadius;
         private double _innerRadius;
+        private double _margin;
 
         #region Dependency Properties
 
@@ -61,6 +61,46 @@ namespace SoundPooper.UserControls
                 new PropertyMetadata(1.0)
             );
 
+        public static readonly DependencyProperty TitleProperty =
+            DependencyProperty.Register(
+                nameof(Title),
+                typeof(string),
+                typeof(CircularSlider),
+                new PropertyMetadata("Title")
+            );
+
+        public static readonly DependencyProperty MainColorProperty =
+            DependencyProperty.Register(
+                nameof(MainColor),
+                typeof(Brush),
+                typeof(CircularSlider),
+                new PropertyMetadata(Brushes.Blue)
+            );
+
+        public static readonly DependencyProperty GlowColorProperty =
+            DependencyProperty.Register(
+                nameof(GlowColor),
+                typeof(Brush),
+                typeof(CircularSlider),
+                new PropertyMetadata(Brushes.Aqua)
+            );
+
+        public static readonly DependencyProperty StrokeThicknessProperty =
+            DependencyProperty.Register(
+                nameof(StrokeThickness),
+                typeof(double),
+                typeof(CircularSlider),
+                new PropertyMetadata(2d)
+            );
+
+        public static readonly DependencyProperty ThumbSizeProperty =
+            DependencyProperty.Register(
+                nameof(ThumbSize),
+                typeof(double),
+                typeof(CircularSlider),
+                new PropertyMetadata(10d)
+            );
+
         #endregion
 
         #region Properties
@@ -89,6 +129,36 @@ namespace SoundPooper.UserControls
             set => SetValue(SmallChangeProperty, value);
         }
 
+        public string Title
+        {
+            get => (string)GetValue(TitleProperty);
+            set => SetValue(TitleProperty, value);
+        }
+
+        public Brush MainColor
+        {
+            get => (Brush)GetValue(MainColorProperty);
+            set => SetValue(MainColorProperty, value);
+        }
+
+        public Brush GlowColor
+        {
+            get => (Brush)GetValue(GlowColorProperty);
+            set => SetValue(GlowColorProperty, value);
+        }
+
+        public double StrokeThickness
+        {
+            get => (double)GetValue(StrokeThicknessProperty);
+            set => SetValue(StrokeThicknessProperty, value);
+        }
+
+        public double ThumbSize
+        {
+            get => (double)GetValue(ThumbSizeProperty);
+            set => SetValue(ThumbSizeProperty, value);
+        }
+
         #endregion
 
         public CircularSlider()
@@ -100,32 +170,75 @@ namespace SoundPooper.UserControls
         {
             var finalSize = base.ArrangeOverride(arrangeBounds);
 
-            if (finalSize.Width > 0 && finalSize.Height > 0)
+            if (finalSize is { Width: > 0, Height: > 0 })
             {
                 CalculateGeometry();
                 UpdateBackground();
-                UpdateGaugeArc();
-                UpdateTrackPath();
+                UpdateTrackArcLine();
+                UpdateBottomArcLine();
                 UpdateThumbPosition();
-                UpdateValueText();
             }
 
             return finalSize;
         }
 
-        private void UpdateValueText()
+        private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (_innerRadius <= 0 || ValueText == null) return;
-
-            var x = _bottomCenter.X;
-            var y = _bottomCenter.Y - _innerRadius;
-
-            ValueText.Text = Value.ToString("0%");
-            ValueText.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            Canvas.SetLeft(ValueText, x - ValueText.DesiredSize.Width / 2);
-            Canvas.SetTop(ValueText, y + ValueText.DesiredSize.Height / 2);
+            var self = (CircularSlider)d;
+            self.UpdateTrackArcLine();
+            self.UpdateThumbPosition();
         }
 
+        private void Canvas_OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            CalculateGeometry();
+            UpdateBackground();
+            UpdateTrackArcLine();
+            UpdateThumbPosition();
+        }
+
+        private void UpdateBottomArcLine()
+        {
+            const int cornerRadius = 25;
+            if (_innerRadius <= 0) return;
+            var h = BottomCanvas.ActualHeight;
+            var w = BottomCanvas.ActualWidth;
+            if (w < 1 || double.IsNaN(w) || h < 1 || double.IsNaN(h)) return;
+
+            var sidesOffset = _margin - StrokeThickness / 2;
+            var startPoint = new Point(0 + sidesOffset, 0);
+            var endPoint = startPoint with { X = w - sidesOffset };
+
+            var figure = new PathFigure { StartPoint = startPoint, IsClosed = true };
+            // left rounded corner
+            figure.Segments.Add(new ArcSegment
+            {
+                Point = startPoint with { Y = startPoint.Y + cornerRadius, X = startPoint.X + cornerRadius },
+                Size = new Size(cornerRadius, cornerRadius),
+                IsLargeArc = false,
+                SweepDirection = SweepDirection.Counterclockwise,
+                IsSmoothJoin = true
+            });
+            // straight line
+            figure.Segments.Add(new LineSegment(
+                endPoint with { X = endPoint.X - cornerRadius, Y = endPoint.Y + cornerRadius },
+                false
+            ));
+
+            // right rounded corner
+            figure.Segments.Add(new ArcSegment
+            {
+                Point = endPoint,
+                Size = new Size(cornerRadius, cornerRadius),
+                IsLargeArc = false,
+                SweepDirection = SweepDirection.Counterclockwise,
+                IsSmoothJoin = true
+            });
+
+            var geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+            BottomArcLine.Data = geometry;
+        }
 
         private static void OnRangeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -141,36 +254,34 @@ namespace SoundPooper.UserControls
             return Math.Clamp(val, slider.Minimum, slider.Maximum);
         }
 
-        private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private Point GetPointOnCircle(double angleDeg, double radius)
         {
-            var slider = (CircularSlider)d;
-            slider.UpdateGaugeArc();
-            slider.UpdateThumbPosition();
-            slider.UpdateValueText();
+            var rad = angleDeg * Math.PI / 180;
+            var x = _bottomCenter.X + radius * Math.Sin(rad);
+            var y = _bottomCenter.Y - radius * Math.Cos(rad);
+            return new Point(x, y);
         }
+
 
         private void CalculateGeometry()
         {
-            var w = this.ActualWidth;
-            var h = this.ActualHeight;
+            var w = MainCanvas.ActualWidth;
+            var h = MainCanvas.ActualHeight;
 
-            if (w < 1 || double.IsNaN(w)) w = this.Width;
-            if (h < 1 || double.IsNaN(h)) h = this.Height;
-            if (double.IsNaN(w)) w = 100;
-            if (double.IsNaN(h)) h = 50;
+            if (w < 1 || double.IsNaN(w) || h < 1 || double.IsNaN(h)) return;
 
             _bottomCenter = new Point(w / 2, h);
 
-            var thumbWidth = Thumb != null && !double.IsNaN(Thumb.Width) ? Thumb.Width : 16;
+            var thumbWidth = ValueThumb != null && !double.IsNaN(ValueThumb.Width) ? ValueThumb.Width : 16;
             _thumbRadius = thumbWidth / 2;
 
-            var trackThickness = TrackPath != null && !double.IsNaN(TrackPath.StrokeThickness)
-                ? TrackPath.StrokeThickness
+            var trackThickness = TrackArcLine != null && !double.IsNaN(TrackArcLine.StrokeThickness)
+                ? TrackArcLine.StrokeThickness
                 : 6;
 
-            var margin = Math.Max(trackThickness / 2, _thumbRadius);
-            _radius = w / 2 - margin;
-            _innerRadius = _radius - trackThickness - 2;
+            _margin = Math.Max(trackThickness / 2, _thumbRadius);
+            _radius = w / 2 - _margin;
+            _innerRadius = _radius;
         }
 
         // Pie shaped background
@@ -198,11 +309,11 @@ namespace SoundPooper.UserControls
 
             var geometry = new PathGeometry();
             geometry.Figures.Add(figure);
-            BackgroundPath.Data = geometry;
+            BackgroundArc.Data = geometry;
         }
 
-        // Colored arc from 'Minimal value' point to 'Current value'
-        private void UpdateGaugeArc()
+        // Track Arc-line from 'Minimal value' to 'Current value'
+        private void UpdateTrackArcLine()
         {
             if (_innerRadius <= 0) return;
 
@@ -224,46 +335,17 @@ namespace SoundPooper.UserControls
 
             var geometry = new PathGeometry();
             geometry.Figures.Add(figure);
-            GaugeArc.Data = geometry;
+            TrackArcLine.Data = geometry;
         }
 
-        private void UpdateTrackPath()
-        {
-            if (_radius <= 0) return;
-
-            var startPoint = GetPointOnCircle(MinAngle, _radius);
-            var endPoint = GetPointOnCircle(MaxAngle, _radius);
-
-            var figure = new PathFigure { StartPoint = startPoint };
-            figure.Segments.Add(new ArcSegment
-            {
-                Point = endPoint,
-                Size = new Size(_radius, _radius),
-                IsLargeArc = SweepAngle > 180,
-                SweepDirection = SweepDirection.Clockwise,
-                IsSmoothJoin = true
-            });
-
-            var geometry = new PathGeometry();
-            geometry.Figures.Add(figure);
-            TrackPath.Data = geometry;
-        }
-
-        private Point GetPointOnCircle(double angleDeg, double radius)
-        {
-            var rad = angleDeg * Math.PI / 180;
-            var x = _bottomCenter.X + radius * Math.Sin(rad);
-            var y = _bottomCenter.Y - radius * Math.Cos(rad);
-            return new Point(x, y);
-        }
 
         private void UpdateThumbPosition()
         {
             var percent = (Value - Minimum) / (Maximum - Minimum);
             var angleDeg = MinAngle + percent * SweepAngle;
             var pos = GetPointOnCircle(angleDeg, _radius);
-            Canvas.SetLeft(Thumb, pos.X - _thumbRadius);
-            Canvas.SetTop(Thumb, pos.Y - _thumbRadius);
+            Canvas.SetLeft(ValueThumb, pos.X - _thumbRadius);
+            Canvas.SetTop(ValueThumb, pos.Y - _thumbRadius);
         }
 
         private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

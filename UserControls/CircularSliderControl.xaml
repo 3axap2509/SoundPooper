@@ -3,47 +3,184 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:SoundPooper.UserControls"
              mc:Ignorable="d"
              Background="Transparent"
-             d:DesignHeight="50"
+             d:DesignHeight="80"
              d:DesignWidth="100"
-             Width="100" Height="50"
              PreviewMouseWheel="UserControl_PreviewMouseWheel">
-    <Canvas x:Name="MainCanvas"
+    <Grid x:Name="MainGrid" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="20" />
+        </Grid.RowDefinitions>
+        <Canvas
+            ZIndex="1"
+            Grid.Row="0"
+            x:Name="MainCanvas"
             Background="Transparent"
+            SizeChanged="Canvas_OnSizeChanged"
+            d:DesignHeight="50"
             MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
             MouseMove="Canvas_MouseMove"
             MouseLeftButtonUp="Canvas_MouseLeftButtonUp">
-        <!-- Залитый сектор-фон (тёмный) -->
-        <Path x:Name="BackgroundPath"
-              Fill="#FF2B2B2B"
-              Stroke="Transparent" />
-        <!-- Цветная дуга шкалы от минимума до значения -->
-        <Path x:Name="GaugeArc"
-              Stroke="Red"
-              StrokeThickness="4"
-              StrokeStartLineCap="Round"
-              StrokeEndLineCap="Round"
-              Fill="Transparent" />
-        <!-- Основная дорожка -->
-        <Path x:Name="TrackPath"
-              Stroke="#FF4A90E2"
-              StrokeThickness="6"
-              StrokeStartLineCap="Round"
-              StrokeEndLineCap="Round"
-              Fill="Transparent" />
-        <!-- Текст текущего значения -->
-        <TextBlock x:Name="ValueText"
-                   Foreground="White"
-                   FontSize="16"
-                   FontWeight="Bold"
-                   TextAlignment="Center"
-                   Text="0" />
-        <!-- Бегунок -->
-        <Ellipse x:Name="Thumb"
-                 Width="16" Height="16"
-                 Fill="White"
-                 Stroke="ForestGreen"
-                 StrokeThickness="2" />
-    </Canvas>
+            <!-- Background -->
+            <Path
+                Fill="#FF2B2B2B"
+                x:Name="BackgroundArc">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="0,50" IsClosed="False">
+                            <PathFigure.Segments>
+                                <ArcSegment
+                                    Point="100,50"
+                                    SweepDirection="Clockwise"
+                                    IsLargeArc="True"
+                                    Size="25, 25"
+                                    IsSmoothJoin="True" />
+                            </PathFigure.Segments>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+            <!-- color arc from 0 to Value -->
+            <Path
+                x:Name="TrackArcLine"
+                StrokeThickness="{Binding 
+                    StrokeThickness,
+                    RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1},
+                    FallbackValue=4
+                }"
+                StrokeStartLineCap="Flat"
+                StrokeEndLineCap="Flat"
+                Fill="Transparent">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="0,50" IsFilled="False">
+                            <PathFigure.Segments>
+                                <ArcSegment
+                                    Point="50, 0"
+                                    SweepDirection="Clockwise"
+                                    IsLargeArc="False"
+                                    Size="50, 50"
+                                    IsSmoothJoin="True" />
+                            </PathFigure.Segments>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+                <Path.Style>
+                    <Style TargetType="Path">
+                        <Setter Property="Stroke"
+                                Value="{Binding 
+                                MainColor,
+                                RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1},
+                                FallbackValue=DarkGreen}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=MainGrid, Path=IsMouseOver}" Value="True">
+                                <Setter Property="Stroke"
+                                        Value="{Binding 
+                                        GlowColor,
+                                        RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1},
+                                        FallbackValue=Red}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Path.Style>
+            </Path>
+            <!-- thumb -->
+            <Ellipse x:Name="ValueThumb"
+                     Canvas.Left="42"
+                     Canvas.Top="-8"
+                     Width="{Binding 
+                        RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, 
+                        Path=ThumbSize, 
+                        FallbackValue=16}"
+                     Height="{Binding 
+                        RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, 
+                        Path=ThumbSize, 
+                        FallbackValue=16}"
+                     StrokeThickness="2">
+                <Ellipse.Style>
+                    <Style TargetType="Ellipse">
+                        <Setter Property="Fill"
+                                Value="{Binding 
+                                RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, 
+                                Path=MainColor, 
+                                FallbackValue=DarkGreen}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ElementName=MainGrid, Path=IsMouseOver}" Value="True">
+                                <Setter Property="Fill"
+                                        Value="{Binding 
+                                            RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1}, 
+                                            Path=GlowColor, 
+                                            FallbackValue=DarkGreen
+                                        }" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Ellipse.Style>
+            </Ellipse>
+
+        </Canvas>
+        <TextBlock 
+            Grid.ZIndex="2"
+            Grid.Row="0"
+            Margin="0,0,0,5"
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Medium"
+            TextAlignment="Center"
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Center"
+            Text="{Binding 
+                Value, 
+                RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1},
+                StringFormat=0%,
+                FallbackValue=50%
+            }" />
+        <Canvas x:Name="BottomCanvas" ZIndex="0" Grid.Row="1">
+            <Path x:Name="BottomArcLine"
+                  Fill="{Binding MainColor, 
+                  RelativeSource={RelativeSource AncestorType=UserControl, AncestorLevel=1},
+                  FallbackValue=DarkGreen
+                  }">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathFigure StartPoint="0,0" IsFilled="True" IsClosed="True">
+                            <PathFigure.Segments>
+                                <ArcSegment
+                                    Point="25, 25"
+                                    SweepDirection="Counterclockwise"
+                                    IsLargeArc="False"
+                                    Size="25, 25"
+                                    IsSmoothJoin="True" />
+                                <LineSegment Point="75,25" />
+                                <ArcSegment
+                                    Point="100, 0"
+                                    SweepDirection="Counterclockwise"
+                                    IsLargeArc="False"
+                                    Size="25, 25"
+                                    IsSmoothJoin="True" />
+                            </PathFigure.Segments>
+                        </PathFigure>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+        </Canvas>
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,3,0,0"
+            Foreground="White"
+            FontSize="16"
+            FontWeight="Medium"
+            TextAlignment="Center"
+            Text="{Binding
+                RelativeSource={RelativeSource AncestorType=UserControl},
+                Path=Title,
+                FallbackValue=Title
+            }"
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Center" />
+    </Grid>
 </UserControl>
