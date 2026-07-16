@@ -5,7 +5,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:vm="clr-namespace:SoundPooper.MVVM.ViewModels"
-        xmlns:views="clr-namespace:SoundPooper.MVVM.Views"
         xmlns:userControls="clr-namespace:SoundPooper.UserControls"
         xmlns:extensions="clr-namespace:SoundPooper.MVVM.Extensions"
 
@@ -28,12 +27,6 @@
         Title="SoundPooperView"
         Height="{Binding ContainerHeight}"
         Width="{Binding ContainerWidth}">
-    <i:Interaction.Triggers>
-        <i:EventTrigger EventName="MouseMove">
-            <i:InvokeCommandAction Command="{Binding MouseMoveCommand}"
-                                   PassEventArgsToCommand="True" />
-        </i:EventTrigger>
-    </i:Interaction.Triggers>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -47,8 +40,52 @@
         </ItemsControl>
         <StackPanel Grid.Column="1"
                     Orientation="Vertical"
-                    VerticalAlignment="Top"
-                    >
+                    VerticalAlignment="Top">
+            <userControls:CircularSlider
+                Title="Volume"
+                SmallChange="0.01"
+                Height="70"
+                Margin="0, 5"
+                MainColor="DarkGreen"
+                GlowColor="SpringGreen"
+                StrokeThickness="5"
+                ThumbSize="14"
+                Value="{Binding SoundVolume, Mode=TwoWay}"
+                Minimum="0.01"
+                Maximum="1" />
+            <Button Style="{StaticResource RoundedButtonStyle}"
+                    DataContext="{Binding RepeatActionButton}"
+                    Content="{Binding Title}"
+                    Width="100"
+                    Height="100"
+                    BorderBrush="DeepSkyBlue"
+                    BorderThickness="0"
+                    Background="Blue">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseEnter">
+                        <i:InvokeCommandAction
+                            Command="{Binding MouseEnterCommand }"
+                            PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
+
+            <Button Style="{StaticResource RoundedButtonStyle}"
+                    DataContext="{Binding CancelActionButton}"
+                    Width="100"
+                    Height="100"
+                    BorderBrush="GreenYellow"
+                    BorderThickness="0"
+                    Background="ForestGreen"
+                    Content="{Binding Title}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="MouseEnter">
+                        <i:InvokeCommandAction
+                            Command="{Binding MouseEnterCommand }"
+                            PassEventArgsToCommand="True" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
             <Button Style="{StaticResource RoundedButtonStyle}"
                     DataContext="{Binding StopActionButton}"
                     Content="{Binding Title}"
@@ -66,46 +103,6 @@
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </Button>
-            <Button Style="{StaticResource RoundedButtonStyle}"
-                    DataContext="{Binding RepeatActionButton}"
-                    Content="{Binding Title}"
-                    Width="100"
-                    Height="100"
-                    BorderBrush="DeepSkyBlue"
-                    BorderThickness="0"
-                    Background="Blue">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="MouseEnter">
-                        <i:InvokeCommandAction
-                            Command="{Binding MouseEnterCommand }"
-                            PassEventArgsToCommand="True" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-            </Button>
-            <Button Style="{StaticResource RoundedButtonStyle}"
-                    DataContext="{Binding CancelActionButton}"
-                    Width="100"
-                    Height="100"
-                    BorderBrush="GreenYellow"
-                    BorderThickness="0"
-                    Background="ForestGreen"
-                    Content="{Binding Title}">
-                <i:Interaction.Triggers>
-                    <i:EventTrigger EventName="MouseEnter">
-                        <i:InvokeCommandAction
-                            Command="{Binding MouseEnterCommand }"
-                            PassEventArgsToCommand="True" />
-                    </i:EventTrigger>
-                </i:Interaction.Triggers>
-            </Button>
-            <userControls:CircularSlider
-                SmallChange="0.01"
-                Height="50"
-                Margin="0, 5"
-                Value="{Binding SoundVolume, Mode=TwoWay}"
-                Minimum="0.01"
-                Maximum="1" />
-
             <Button Style="{StaticResource RoundedButtonStyle}"
                     DataContext="{Binding QuitActionButton}"
                     Content="{Binding Title}"
