@@ -25,22 +25,42 @@
         }"
         d:DataContext="{d:DesignInstance Type=vm:SoundPooperViewModel, IsDesignTimeCreatable=True}"
         Title="SoundPooperView"
-        Height="{Binding ContainerHeight}"
-        Width="{Binding ContainerWidth}">
-    <Grid>
+        SizeToContent="WidthAndHeight">
+    <Grid 
+        Width="{Binding ContainerWidth}" 
+        Height="{Binding ContainerHeight}">
+        <Grid.LayoutTransform>
+            <ScaleTransform
+                ScaleX="{Binding ScaleFactor}"
+                ScaleY="{Binding ScaleFactor}" />
+        </Grid.LayoutTransform>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
+
         <ItemsControl
             Grid.Column="0"
+
             Style="{StaticResource SplitedItemsPanelStyle}"
             ItemsSource="{Binding SoundListLeftPart}">
         </ItemsControl>
         <StackPanel Grid.Column="1"
                     Orientation="Vertical"
                     VerticalAlignment="Top">
+            <userControls:CircularSlider
+                Title="Scale"
+                SmallChange="0.1"
+                Height="70"
+                Margin="0, 5"
+                MainColor="DarkGray"
+                GlowColor="LightGray"
+                StrokeThickness="5"
+                ThumbSize="14"
+                Value="{Binding ScaleFactor, Mode=TwoWay}"
+                Minimum="0.5"
+                Maximum="2" />
             <userControls:CircularSlider
                 Title="Volume"
                 SmallChange="0.01"

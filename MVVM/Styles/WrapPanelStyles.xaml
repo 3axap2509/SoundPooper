@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:userControls="clr-namespace:SoundPooper.UserControls"
                     xmlns:vm="clr-namespace:SoundPooper.MVVM.ViewModels"
-                    xmlns:b="http://schemas.microsoft.com/xaml/behaviors">
+                    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+                    xmlns:extensions="clr-namespace:SoundPooper.MVVM.Extensions">
     <Style TargetType="{x:Type ItemsControl}" x:Key="SplitedItemsPanelStyle">
         <Setter Property="ItemsPanel">
             <Setter.Value>
@@ -15,8 +16,9 @@
             <Setter.Value>
                 <DataTemplate DataType="{x:Type vm:SoundButtonViewModel}">
                     <Border Background="LightGreen"
+                            extensions:AdornerExtensions.ShowCircleAdorner="True"
                             Margin="10"
-                            CornerRadius="20, 40, 10, 30" BorderThickness="2"
+                            CornerRadius="200" BorderThickness="2"
                             BorderBrush="Black">
                         <DockPanel
                             Margin="5"

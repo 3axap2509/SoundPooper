@@ -11,6 +11,7 @@ public class SoundPooperViewModel : ViewModelBase
     private int _windowTopLeftX;
     private int _windowTopLeftY;
     private float _soundVolume = 0.3f;
+    private double _scaleFactor = 1d;
     private int SoundElementHeight { get; }
     private int SoundElementWidth { get; }
 
@@ -104,6 +105,15 @@ public class SoundPooperViewModel : ViewModelBase
         {
             if (!SetField(ref _soundVolume, value)) return;
             _soundService.SetSoundVolume(value);
+        }
+    }
+
+    public double ScaleFactor
+    {
+        get => _scaleFactor;
+        set
+        {
+            SetField(ref _scaleFactor, value);
         }
     }
 }

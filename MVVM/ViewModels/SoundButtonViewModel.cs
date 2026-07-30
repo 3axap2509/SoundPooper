@@ -6,7 +6,7 @@ namespace SoundPooper.MVVM.ViewModels;
 
 public class SoundButtonViewModel : ActionButtonViewModel
 {
-    protected string Path { get; init; }
+    private string Path { get; init; }
     public Icon? Icon { get; set; }
     public int? Height { get; init; }
     public int? Width { get; init; }
