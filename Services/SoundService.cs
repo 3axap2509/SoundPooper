@@ -14,13 +14,13 @@ public class SoundService : ISoundService
     //todo: add both options available:
     //todo: 1) in-out devices with microphone-wrapping (for example VB-Cable)
     //todo: 2) out-only device (for example SteelSeries Sonar)
-    
+
     private const string OutputDeviceKey = "SteelSeries Sonar - Aux";
     private static readonly WaveFormat WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(48000, 2);
 
 
-    private WasapiCapture? _capture;
-    private BufferedWaveProvider? _bufferedWaveProvider;
+    // private WasapiCapture? _capture;
+    // private BufferedWaveProvider? _bufferedWaveProvider;
     private MixingSampleProvider? _mainMixer;
     private MixingSampleProvider? _soundMixer;
     private VolumeSampleProvider? _soundVolumeProvider;
@@ -56,7 +56,7 @@ public class SoundService : ISoundService
         };
         _soundVolumeProvider = new VolumeSampleProvider(_soundMixer)
         {
-            Volume = 0.3f
+            Volume = 0.07f
         };
         _mainMixer = new MixingSampleProvider(WaveFormat)
         {
@@ -69,6 +69,7 @@ public class SoundService : ISoundService
         var outputDevice = new MMDeviceEnumerator()
             .EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
             .First(d => d.FriendlyName.Contains(OutputDeviceKey));
+        ArgumentNullException.ThrowIfNull(outputDevice);
 
         _virtualOutput = new WasapiOut(
             outputDevice,
@@ -76,7 +77,7 @@ public class SoundService : ISoundService
             useEventSync: false,
             latency: 10
         );
-
+        ArgumentNullException.ThrowIfNull(_virtualOutput);
         _virtualOutput.Init(_mainMixer);
         _virtualOutput.Play();
     }
@@ -84,6 +85,7 @@ public class SoundService : ISoundService
     public void PlaySound(string soundPath)
     {
         if (string.IsNullOrEmpty(soundPath)) return;
+        ArgumentNullException.ThrowIfNull(_virtualOutput);
 
         var reader = new AudioFileReader(soundPath);
         var resamplingProvider = new WdlResamplingSampleProvider(reader, WaveFormat.SampleRate);
@@ -91,7 +93,7 @@ public class SoundService : ISoundService
             resamplingProvider,
             self =>
             {
-                _soundMixer!.RemoveMixerInput(self);
+                _soundMixer?.RemoveMixerInput(self);
                 _activeSoundProviders.Remove(self);
                 _activeFileReaders.Remove(reader);
                 reader.Dispose();
@@ -103,7 +105,7 @@ public class SoundService : ISoundService
         _activeFileReaders.Add(reader);
         _lastPlayedSoundPath = soundPath;
 
-        if (_virtualOutput!.PlaybackState != PlaybackState.Playing)
+        if (_virtualOutput.PlaybackState != PlaybackState.Playing)
             _virtualOutput.Play();
     }
 
@@ -111,12 +113,17 @@ public class SoundService : ISoundService
 
     public void StopPlaying()
     {
-        _activeSoundProviders.ForEach(sound => _soundMixer!.RemoveMixerInput(sound));
+        ArgumentNullException.ThrowIfNull(_soundMixer);
+        _activeSoundProviders.ForEach(sound => _soundMixer.RemoveMixerInput(sound));
         _activeSoundProviders.Clear();
 
         _activeFileReaders.ForEach(reader => reader.Dispose());
         _activeFileReaders.Clear();
     }
 
-    public void SetSoundVolume(float value) => _soundVolumeProvider!.Volume = Math.Clamp(value, 0f, 1f);
+    public void SetSoundVolume(float value)
+    {
+        ArgumentNullException.ThrowIfNull(_soundVolumeProvider);
+        _soundVolumeProvider.Volume = Math.Clamp(value, 0f, 1f);
+    }
 }
